@@ -1,0 +1,55 @@
+{
+  "note": "Generic infrared codes bundled with the toolbox. The patterns follow the common NEC protocol at 38 kHz. Some devices use a different protocol, in which case a custom pattern can be entered by hand.",
+  "devices": [
+    {
+      "name": "Generic TV (NEC)",
+      "carrier": 38000,
+      "codes": [
+        { "name": "Power", "code": "0x20DF10EF" },
+        { "name": "Power toggle", "code": "0x20DF23DC" },
+        { "name": "Volume up", "code": "0x20DF40BF" },
+        { "name": "Volume down", "code": "0x20DFC03F" },
+        { "name": "Mute", "code": "0x20DF906F" },
+        { "name": "Channel up", "code": "0x20DF00FF" },
+        { "name": "Channel down", "code": "0x20DF807F" },
+        { "name": "Input / source", "code": "0x20DFA25F" },
+        { "name": "Menu", "code": "0x20DF609F" },
+        { "name": "Home", "code": "0x20DF22DD" }
+      ]
+    },
+    {
+      "name": "Generic set top box (NEC)",
+      "carrier": 38000,
+      "codes": [
+        { "name": "Power", "code": "0x20DF10EF" },
+        { "name": "Guide", "code": "0x20DFA25F" },
+        { "name": "Menu", "code": "0x20DF609F" },
+        { "name": "Back", "code": "0x20DF14EB" },
+        { "name": "OK", "code": "0x20DFE21D" },
+        { "name": "Volume up", "code": "0x20DF40BF" },
+        { "name": "Volume down", "code": "0x20DFC03F" }
+      ]
+    },
+    {
+      "name": "Generic projector (NEC)",
+      "carrier": 38000,
+      "codes": [
+        { "name": "Power", "code": "0x20DF10EF" },
+        { "name": "Mute", "code": "0x20DF906F" },
+        { "name": "Input", "code": "0x20DFA25F" },
+        { "name": "Menu", "code": "0x20DF609F" }
+      ]
+    },
+    {
+      "name": "Generic air conditioner (NEC)",
+      "carrier": 38000,
+      "codes": [
+        { "name": "Power", "code": "0x20DF10EF" },
+        { "name": "Temperature up", "code": "0x20DF40BF" },
+        { "name": "Temperature down", "code": "0x20DFC03F" },
+        { "name": "Fan speed", "code": "0x20DF906F" },
+        { "name": "Mode", "code": "0x20DF00FF" }
+      ]
+    }
+  ]
+}

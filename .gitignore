@@ -1,0 +1,23 @@
+# Build output
+build/
+*/build/
+*/*/build/
+.gradle/
+local.properties
+captures/
+.cxx/
+
+# Offline tool-chain (fetched by tools/fetch-toolchain.sh)
+tools/toolchain/
+tools/.toolchain/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Signing material
+*.keystore
+*.jks

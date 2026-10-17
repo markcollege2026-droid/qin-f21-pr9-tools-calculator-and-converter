@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ==================== App ==================== -->
+    <string name="app_name">Qin F21 Toolbox</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!-- ==================== Home ==================== -->
+    <string name="search_hint">Search tools</string>
+    <string name="search_empty">No tool matches that search.</string>
+    <string name="search_results">Results (%1$d)</string>
+    <string name="section_favorites">Favourites</string>
+    <string name="section_recent">Recently used</string>
+    <string name="tool_needs_permission">Permission required</string>
+    <string name="tool_not_available">Not available on this device</string>
+
+    <!-- ==================== Actions ==================== -->
+    <string name="action_calculate">Calculate</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_export">Export</string>
+    <string name="action_export_csv">CSV</string>
+    <string name="action_export_json">JSON</string>
+    <string name="action_favourite">Favourite</string>
+    <string name="action_grant_permission">Grant permission</string>
+    <string name="action_lap">Lap</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_record">Record</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_reset_rates">Reset rates</string>
+    <string name="action_save">Save</string>
+    <string name="action_share">Share</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_swap">Swap units</string>
+    <string name="action_turn_off">Turn off</string>
+    <string name="action_turn_on">Turn on</string>
+    <string name="action_update">Update</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_torch">Torch</string>
+
+    <!-- ==================== Errors ==================== -->
+    <string name="error_generic">Something went wrong.</string>
+    <string name="error_invalid_number">Please enter a number for %1$s</string>
+
+    <!-- ==================== Converter ==================== -->
+    <string name="converter_all_units">%1$s in all units</string>
+    <string name="currency_offline_note">Offline reference rates bundled with the app (%1$s). No network is used; edit the rates in Settings.</string>
+    <string name="currency_offline_short">Bundled offline rates</string>
+    <string name="currency_rate_line">1 %1$s = %3$s %2$s · 1 %2$s = %4$s %1$s</string>
+
+    <!-- ==================== Quick calculators ==================== -->
+    <string name="qc_percentage_result">%1$s%% of %2$s = %3$s\n%3$s is %4$s%% of %2$s</string>
+    <string name="qc_change_result">Change %1$s%% (%2$s)</string>
+    <string name="qc_price_result">Total %1$s\nSaved %2$s · after tax %3$s</string>
+    <string name="qc_split_result">Each pays %1$s\n%2$s</string>
+    <string name="qc_bmi_result">BMI %1$s (%2$s)\nHealthy weight %3$s – %4$s kg</string>
+    <string name="qc_loan_result">Monthly payment %1$s\nTotal paid %2$s\nTotal interest %3$s</string>
+    <string name="qc_interest_result">Simple interest %1$s\nCompound interest %2$s</string>
+    <string name="qc_number_result">GCD %1$s · LCM %2$s\nFactors %3$s\nPrime: %4$s</string>
+    <string name="qc_roman_result">%1$s = %2$s</string>
+    <string name="qc_base_result">%1$s\nBinary %2$s\nOctal %3$s\nHex %4$s</string>
+    <string name="qc_random_result">%1$s</string>
+    <string name="qc_fuel_result">Trip cost %1$s\n%2$s per km</string>
+    <string name="qc_speed_result">Average speed %1$s km/h\nPace %2$s min/km</string>
+    <string name="qc_cooking_result">Scaled time %1$s min\nFan oven %2$s min</string>
+    <string name="qc_age_result">%1$s years %2$s months %3$s days\n%4$s days in total</string>
+
+    <!-- ==================== Geometry ==================== -->
+    <string name="geo_circle">Area %1$s\nCircumference %2$s</string>
+    <string name="geo_rectangle">Area %1$s\nPerimeter %2$s</string>
+    <string name="geo_triangle">Area %1$s</string>
+    <string name="geo_right_triangle">Hypotenuse %1$s</string>
+    <string name="geo_trapezoid">Area %1$s</string>
+    <string name="geo_sphere">Volume %1$s\nSurface %2$s</string>
+    <string name="geo_cylinder">Volume %1$s</string>
+
+    <!-- ==================== Date & time ==================== -->
+    <string name="dc_from">From</string>
+    <string name="dc_to">To</string>
+    <string name="dc_adjust">Add or subtract an interval</string>
+    <string name="dc_apply">Apply</string>
+    <string name="dc_add">Add</string>
+    <string name="dc_subtract">Subtract</string>
+    <string name="dc_today">Today</string>
+    <string name="dc_difference">%1$d y %2$d m %3$d d\n%4$d days (%5$d hours)</string>
+    <string name="dc_result">%1$s → %2$s</string>
+
+    <!-- ==================== Time zones ==================== -->
+    <string name="tz_from">Local time</string>
+    <string name="tz_to">Other time zone</string>
+    <string name="tz_other_zones">World clock</string>
+    <string name="tz_offsets">UTC%1$s · UTC%2$s</string>
+    <string name="tz_difference">Difference %1$s%2$d h %3$d min</string>
+    <string name="tz_same">Both time zones are the same</string>
+
+    <!-- ==================== Stopwatch & timer ==================== -->
+    <string name="stopwatch_ready">Ready</string>
+    <string name="stopwatch_running">Running</string>
+    <string name="stopwatch_paused">Paused</string>
+    <string name="stopwatch_laps">Lap times</string>
+    <string name="stopwatch_no_laps">No lap times yet.</string>
+    <string name="timer_ready">Ready</string>
+    <string name="timer_running">Counting down</string>
+    <string name="timer_paused">Paused</string>
+    <string name="timer_finished">Time is up</string>
+    <string name="timer_set_duration">Set a duration first.</string>
+    <string name="timer_channel">Timer alerts</string>
+    <string name="timer_notification_title">Timer finished</string>
+    <string name="timer_notification_text">The countdown has ended.</string>
+
+    <!-- ==================== Flashlight ==================== -->
+    <string name="flashlight_detail">Uses the LED flash of the rear camera.</string>
+    <string name="flashlight_unavailable">No flash unit was reported by this device.</string>
+    <string name="flashlight_unavailable_title">Flashlight not available</string>
+    <string name="flashlight_on">Light is on</string>
+    <string name="flashlight_off">Light is off</string>
+
+    <!-- ==================== Infrared ==================== -->
+    <string name="ir_devices">Bundled code lists</string>
+    <string name="ir_custom">Send a custom code</string>
+    <string name="ir_custom_hint">Hex pattern, for example 0x20DF10EF or 20 DF 10 EF.</string>
+    <string name="ir_send">Send</string>
+    <string name="ir_sent">Infrared code sent.</string>
+    <string name="ir_send_failed">The code could not be sent.</string>
+    <string name="ir_invalid_code">That is not a valid hex pattern.</string>
+    <string name="ir_unavailable_title">No infrared emitter</string>
+    <string name="ir_unavailable_message">This device does not report an infrared emitter, so %1$s cannot transmit infrared codes. The bundled code list stays available for reference.</string>
+    <string name="ir_status_missing">Infrared emitter not detected on this device.</string>
+
+    <!-- ==================== Sound meter ==================== -->
+    <string name="sound_idle">Waiting for the microphone</string>
+    <string name="sound_detail">dBFS %1$.1f · RMS %2$.0f%% · peak %3$.0f%%</string>
+    <string name="sound_spectrum">Spectrum</string>
+    <string name="sound_calibration_note">Phone microphones are not calibrated. The dB value is an estimate: the exact reading is the dBFS level, the offset can be changed in Settings.</string>
+    <string name="sound_unavailable_title">Microphone not available</string>
+    <string name="sound_unavailable_message">No microphone was reported, or the permission was denied.</string>
+
+    <!-- ==================== Recorder ==================== -->
+    <string name="recorder_files">Recordings</string>
+    <string name="recorder_no_files">No recordings yet.</string>
+    <string name="recorder_saved">Saved %1$s</string>
+    <string name="recorder_share_failed">The file could not be shared.</string>
+    <string name="recorder_unavailable_title">Microphone not available</string>
+
+    <!-- ==================== Camera & scanner ==================== -->
+    <string name="camera_scan_hint">Point the camera at a QR code or barcode.</string>
+    <string name="camera_photo_hint">Press the button to take a photo.</string>
+    <string name="camera_no_code">No code found in this frame.</string>
+    <string name="camera_no_torch">The flash cannot be used as a torch here.</string>
+    <string name="camera_error">The camera could not be started.</string>
+    <string name="camera_permission_denied">The camera permission was denied.</string>
+    <string name="camera_no_photo">No photo taken yet.</string>
+    <string name="camera_photo_info">%1$s (%2$s)</string>
+    <string name="camera_take_photo">Take photo</string>
+    <string name="camera_unavailable_title">Camera not available</string>
+    <string name="camera_storage_note">Photos are stored in the app folder on the device and are never uploaded.</string>
+    <string name="scanner_empty">Nothing scanned yet.</string>
+    <string name="scanner_start">Open scanner</string>
+    <string name="scanner_format">Format: %1$s</string>
+    <string name="scanner_copied">Copied to the clipboard.</string>
+    <string name="scanner_privacy_note">Codes are decoded on the device. No image or code is sent anywhere.</string>
+    <string name="scanner_unavailable_title">Camera not available</string>
+    <string name="scanner_unavailable_message">No camera was reported by this device, so scanning is not possible.</string>
+
+    <!-- ==================== GPS ==================== -->
+    <string name="gps_waiting">Waiting for a position</string>
+    <string name="gps_searching">Searching for satellites…</string>
+    <string name="gps_unavailable">No location provider is available.</string>
+    <string name="gps_permission_needed">The location permission is needed to show the position.</string>
+    <string name="gps_provider_on">%1$s enabled</string>
+    <string name="gps_provider_off">%1$s disabled</string>
+    <string name="gps_altitude">Alt %1$.0f m</string>
+    <string name="gps_speed">%1$.1f km/h</string>
+    <string name="gps_bearing">%1$.0f°</string>
+    <string name="gps_accuracy">±%1$.0f m</string>
+    <string name="gps_time">%1$s</string>
+    <string name="gps_satellites">Satellites: %1$d used / %2$d in view</string>
+    <string name="gps_copied">Coordinates copied.</string>
+
+    <!-- ==================== Diagnostics ==================== -->
+    <string name="diag_device">Device</string>
+    <string name="diag_display">Display</string>
+    <string name="diag_memory">Memory</string>
+    <string name="diag_storage">Storage</string>
+    <string name="diag_battery">Battery</string>
+    <string name="diag_sensors">Sensors</string>
+    <string name="diag_network">Network</string>
+    <string name="diag_available">Available</string>
+    <string name="diag_not_present">Not present</string>
+    <string name="diag_permission">Permission needed</string>
+    <string name="diag_disabled">Disabled</string>
+    <string name="diag_no_sensors">No sensors reported</string>
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_gyroscope">Gyroscope</string>
+    <string name="sensor_magnetometer">Magnetometer</string>
+    <string name="sensor_light">Light sensor</string>
+    <string name="sensor_proximity">Proximity sensor</string>
+    <string name="sensor_pressure">Barometer</string>
+    <string name="sensor_step_counter">Step counter</string>
+    <string name="sensor_heart_rate">Heart rate</string>
+    <string name="sensor_other">Other sensor</string>
+
+    <!-- ==================== History & favourites ==================== -->
+    <string name="history_empty">Nothing here yet. Results of the tools are stored on the device.</string>
+    <string name="history_cleared">History cleared.</string>
+    <string name="history_copied">Copied to the clipboard.</string>
+    <string name="history_exported">Exported %1$s</string>
+    <string name="favorites_empty">No favourites yet. Open a tool and tap the star to pin it.</string>
+    <string name="favorites_cleared">Favourites cleared.</string>
+    <string name="favourite_added">Added to favourites.</string>
+    <string name="favourite_removed">Removed from favourites.</string>
+
+    <!-- ==================== Settings ==================== -->
+    <string name="settings_display">Display</string>
+    <string name="settings_keep_screen_on">Keep the screen on</string>
+    <string name="settings_keep_screen_on_hint">Useful while the stopwatch or the timer runs.</string>
+    <string name="settings_audio">Microphone</string>
+    <string name="settings_calibration">Calibration offset (dB)</string>
+    <string name="settings_calibration_hint">The offset is added to the measured dBFS level to estimate the sound pressure. 94 dB is a common reference for a phone at arm\'s length.</string>
+    <string name="settings_currency">Exchange rates</string>
+    <string name="settings_rate_invalid">Enter a three letter code and a rate above zero.</string>
+    <string name="settings_rate_saved">Rate for %1$s updated.</string>
+    <string name="settings_rate_overrides">Custom rates: %1$s</string>
+    <string name="settings_rate_none">The bundled offline rates are in use.</string>
+    <string name="settings_rates_reset">The bundled rates are in use again.</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_import">Import a backup</string>
+    <string name="settings_import_hint">Read a toolbox JSON file from the device.</string>
+    <string name="settings_imported">Imported %1$d history entries and %2$d favourites.</string>
+    <string name="settings_import_failed">The file could not be read.</string>
+    <string name="settings_clear_history">Clear the history</string>
+    <string name="settings_clear_history_hint">Removes every stored result.</string>
+    <string name="settings_clear_favorites">Clear the favourites</string>
+    <string name="settings_clear_favorites_hint">Removes every pinned tool.</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_offline_note">The app has no internet permission. Everything runs on the device.</string>
+    <string name="settings_saved">Saved.</string>
+
+    <!-- ==================== About ==================== -->
+    <string name="about_version">Version %1$s</string>
+    <string name="about_tagline">An offline toolbox for the Qin F21 Pro.</string>
+    <string name="about_offline_title">Offline by design</string>
+    <string name="about_offline_body">The app does not request the internet permission, so it cannot reach any server. There are no ads, no analytics and no cloud storage. Exchange rates, infrared codes and all reference data are bundled in the package.</string>
+    <string name="about_hardware_title">Detected hardware</string>
+    <string name="about_keys_title">Keypad shortcuts</string>
+    <string name="about_keys_dpad">D-pad moves the focus, the centre key activates.</string>
+    <string name="about_keys_enter">Enter confirms and starts the focused action.</string>
+    <string name="about_keys_numbers">The numeric keypad types directly into the value field.</string>
+    <string name="about_keys_back">Back returns to the previous screen.</string>
+    <string name="about_keys_star">Star toggles the sign of the value.</string>
+    <string name="about_keys_hash">Hash clears the value.</string>
+    <string name="about_licenses_title">Third party code</string>
+    <string name="about_licenses_body">The barcode decoding uses the ZXing core library (Apache License 2.0), vendored in the source tree. The Kotlin standard library is used under the Apache License 2.0.</string>
+
+</resources>
