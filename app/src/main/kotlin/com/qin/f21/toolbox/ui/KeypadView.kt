@@ -32,6 +32,11 @@ class KeypadView(
                 button.text = key
                 button.setTextAppearance(context, com.qin.f21.toolbox.R.style.Widget_App_Button_Key)
                 button.isAllCaps = false
+                // the keypad measures the keys itself, the style minimums would clip them
+                button.minHeight = 0
+                button.minWidth = 0
+                button.setPadding(0, 0, 0, 0)
+                button.includeFontPadding = false
                 button.setOnClickListener { onKey(key) }
                 buttons.add(button)
                 addView(button)

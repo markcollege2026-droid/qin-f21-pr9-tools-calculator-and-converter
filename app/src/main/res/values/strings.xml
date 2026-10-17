@@ -47,7 +47,7 @@
     <string name="error_invalid_number">Please enter a number for %1$s</string>
 
     <!-- ==================== Converter ==================== -->
-    <string name="converter_all_units">%1$s in all units</string>
+    <string name="converter_all_units">%1$s in all %2$d units</string>
     <string name="currency_offline_note">Offline reference rates bundled with the app (%1$s). No network is used; edit the rates in Settings.</string>
     <string name="currency_offline_short">Bundled offline rates</string>
     <string name="currency_rate_line">1 %1$s = %3$s %2$s · 1 %2$s = %4$s %1$s</string>

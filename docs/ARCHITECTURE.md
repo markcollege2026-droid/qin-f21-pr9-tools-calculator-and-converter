@@ -78,6 +78,27 @@ process cannot open a socket.
   `com.qin.f21.toolbox.core.data.ToolboxFileProvider`, a minimal `ContentProvider`
   that replaces the AndroidX `FileProvider`.
 
+## Fitting the 2.8" screen
+
+The viewport of the Qin F21 Pro is 480 x 640 px, which is 320 x 427 dp at the 1.5
+density bucket. The vertical budget of the busiest screen (the unit converter) is:
+
+| Element | Height |
+|---------|--------|
+| Header (back, title, subtitle) | 44 dp |
+| Category picker + favourite button | 44 dp |
+| Value row (compact input + swap) | 36 dp |
+| Unit pickers (from → to) | 40 dp |
+| Result card | 52 dp |
+| "All units" caption | 16 dp |
+| Numeric keypad (4 rows) | 120 dp |
+| **Remaining for the unit list** | **~70 dp (2 rows, scrollable)** |
+
+The calculator uses the free space for a five row keypad (~55 dp per key), the timer and
+the sound meter use a single scrolling column, and the list screens use 44 dp rows so
+that every entry is a comfortable D-pad stop. Nothing relies on a gesture that a D-pad
+cannot express, and no horizontal scrolling is required for the primary flow of a tool.
+
 ## Rendering and performance
 
 * One screen is inflated at a time; the previous one is removed from the view tree, so

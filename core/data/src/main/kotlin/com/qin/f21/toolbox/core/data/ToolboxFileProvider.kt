@@ -66,11 +66,14 @@ class ToolboxFileProvider : ContentProvider() {
 
     private fun resolve(uri: Uri): File? {
         val context = context ?: return null
-        val name = uri.lastPathSegment ?: return null
+        // the whole path is used, so files in sub folders (recordings) work as well
+        val relative = uri.path?.trimStart('/')?.trim('/') ?: return null
+        if (relative.isEmpty()) return null
         val base = context.getExternalFilesDir(null) ?: context.filesDir
-        val file = File(base, name)
+        val file = File(base, relative)
         // never serve anything outside the app specific directory
-        if (!file.canonicalPath.startsWith(base.canonicalPath)) return null
+        val root = base.canonicalPath
+        if (!file.canonicalPath.startsWith(root + File.separator)) return null
         return file
     }
 }

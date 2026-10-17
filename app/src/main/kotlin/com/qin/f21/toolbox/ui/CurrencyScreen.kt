@@ -50,13 +50,14 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
         val root = Widgets.column(context)
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        amountLabel = Widgets.text(context, input, R.style.Text_Display)
+        amountLabel = Widgets.text(context, input, R.style.Text_Title)
+        amountLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 20f)
         amountLabel.gravity = Gravity.CENTER_VERTICAL
         val amountCard = Widgets.row(context)
         amountCard.gravity = Gravity.CENTER_VERTICAL
         amountCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 8),
-            Widgets.dp(context, 12), Widgets.dp(context, 8)
+            Widgets.dp(context, 12), Widgets.dp(context, 5),
+            Widgets.dp(context, 12), Widgets.dp(context, 5)
         )
         amountCard.background = Widgets.roundedBackground(
             context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
@@ -101,13 +102,14 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
         val resultCard = Widgets.row(context)
         resultCard.gravity = Gravity.CENTER_VERTICAL
         resultCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 10),
-            Widgets.dp(context, 12), Widgets.dp(context, 10)
+            Widgets.dp(context, 12), Widgets.dp(context, 7),
+            Widgets.dp(context, 12), Widgets.dp(context, 7)
         )
         resultCard.background = Widgets.roundedBackground(
             context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary)
         )
         resultLabel = Widgets.text(context, "", R.style.Text_Display)
+        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 26f)
         resultLabel.maxLines = 1
         resultLabel.ellipsize = android.text.TextUtils.TruncateAt.START
         resultCard.addView(resultLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
@@ -139,12 +141,12 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
             arrayOf(
                 arrayOf("7", "8", "9", "⌫"),
                 arrayOf("4", "5", "6", "C"),
-                arrayOf("1", "2", "3", "±"),
-                arrayOf("0", ".", "−", " ")
+                arrayOf("1", "2", "3", "−"),
+                arrayOf("0", "00", ".", "±")
             )
-        ) { key -> onKey(key.first()) }
+        ) { key -> onKey(key) }
         root.addView(keypad, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, Widgets.dp(context, 132)
+            ViewGroup.LayoutParams.MATCH_PARENT, Widgets.dp(context, 120)
         ).apply { setMargins(Widgets.dp(context, 4), 0, Widgets.dp(context, 4), Widgets.dp(context, 4)) })
 
         refreshSpinners()
@@ -174,21 +176,19 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
         toSpinner.setSelection(currencies.indexOf(to).coerceAtLeast(0))
     }
 
-    private fun onKey(key: Char) {
+    private fun onKey(key: String) {
         when (key) {
-            'C' -> input = "0"
-            '⌫' -> {
+            "C" -> input = "0"
+            "⌫" -> {
                 input = input.dropLast(1)
                 if (input.isEmpty() || input == "-") input = "0"
             }
-            '±' -> input = if (input.startsWith("-")) input.substring(1) else "-$input"
-            '−' -> if (!input.startsWith("-")) input = "-$input"
-            else -> {
-                if (key.isDigit()) {
-                    input = if (input == "0") key.toString() else input + key
-                } else if (key == '.' && !input.contains('.')) {
-                    input += "."
-                }
+            "±" -> input = if (input.startsWith("-")) input.substring(1) else "-$input"
+            "−" -> if (!input.startsWith("-")) input = "-$input"
+            "." -> if (!input.contains('.')) input += "."
+            "00" -> input = if (input == "0") "0" else input + "00"
+            else -> if (key.isNotEmpty() && key[0].isDigit()) {
+                input = if (input == "0") key else input + key
             }
         }
         update()
@@ -238,14 +238,14 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9) {
-            onKey('0' + (keyCode - KeyEvent.KEYCODE_0))
+            onKey((keyCode - KeyEvent.KEYCODE_0).toString())
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_PERIOD || keyCode == KeyEvent.KEYCODE_NUMPAD_DOT) {
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_DEL) {
-            onKey('⌫')
+            onKey("⌫")
             return true
         }
         return false

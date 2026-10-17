@@ -148,6 +148,14 @@ object Widgets {
         return button
     }
 
+    /** A button for the narrow slots (function rows, preset chips). */
+    fun compactButton(context: Context, label: CharSequence, secondary: Boolean = true): Button {
+        val button = button(context, label, secondary)
+        button.setPadding(0, 0, 0, 0)
+        button.maxLines = 1
+        return button
+    }
+
     fun editField(context: Context, hint: CharSequence = ""): EditText {
         val field = EditText(context)
         field.setTextAppearance(context, R.style.Widget_App_Field)

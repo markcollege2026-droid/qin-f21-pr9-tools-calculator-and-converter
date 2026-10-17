@@ -92,22 +92,23 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
         })
 
         // --- value + swap --------------------------------------------------------
         val valueCard = Widgets.row(context)
         valueCard.gravity = Gravity.CENTER_VERTICAL
         valueCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 8),
-            Widgets.dp(context, 6), Widgets.dp(context, 8)
+            Widgets.dp(context, 12), Widgets.dp(context, 4),
+            Widgets.dp(context, 4), Widgets.dp(context, 4)
         )
         valueCard.background = Widgets.roundedBackground(
             context,
             Widgets.color(context, R.color.surface),
             Widgets.color(context, R.color.outline)
         )
-        valueLabel = Widgets.text(context, input, R.style.Text_Display)
+        valueLabel = Widgets.text(context, input, R.style.Text_Title)
+        valueLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 20f)
         valueLabel.gravity = Gravity.CENTER_VERTICAL
         valueLabel.maxLines = 1
         valueLabel.ellipsize = android.text.TextUtils.TruncateAt.START
@@ -120,14 +121,14 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
         swapButton.contentDescription = context.getString(R.string.action_swap)
         swapButton.setOnClickListener { swapUnits() }
         valueCard.addView(swapButton, LinearLayout.LayoutParams(
-            Widgets.dp(context, 40),
-            Widgets.dp(context, 40)
+            Widgets.dp(context, 32),
+            Widgets.dp(context, 32)
         ))
         root.addView(valueCard, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
         })
 
         // --- unit pickers --------------------------------------------------------
@@ -168,15 +169,15 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
         })
 
         // --- result --------------------------------------------------------------
         val resultCard = Widgets.row(context)
         resultCard.gravity = Gravity.CENTER_VERTICAL
         resultCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 8),
-            Widgets.dp(context, 12), Widgets.dp(context, 8)
+            Widgets.dp(context, 12), Widgets.dp(context, 6),
+            Widgets.dp(context, 12), Widgets.dp(context, 6)
         )
         resultCard.background = Widgets.roundedBackground(
             context,
@@ -184,6 +185,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             Widgets.color(context, R.color.primary)
         )
         resultLabel = Widgets.text(context, "", R.style.Text_Display)
+        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 26f)
         resultLabel.maxLines = 1
         resultLabel.ellipsize = android.text.TextUtils.TruncateAt.START
         resultLabel.setTextColor(Widgets.color(context, R.color.primary))
@@ -197,7 +199,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
         })
 
         // --- all units -----------------------------------------------------------
@@ -206,7 +208,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0)
+            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 6), Widgets.dp(context, 12), 0)
         })
         val listScroll = ScrollView(context)
         listScroll.isVerticalScrollBarEnabled = false
@@ -229,14 +231,14 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             arrayOf(
                 arrayOf("7", "8", "9", "⌫"),
                 arrayOf("4", "5", "6", "C"),
-                arrayOf("1", "2", "3", "±"),
-                arrayOf("0", ".", "−", " ")
+                arrayOf("1", "2", "3", "−"),
+                arrayOf("0", "00", ".", "±")
             )
-        ) { key -> onKeypadKey(key.first()) }
+        ) { key -> onKeypadKey(key) }
         keypad.visibility = View.VISIBLE
         root.addView(keypad, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            Widgets.dp(context, 132)
+            Widgets.dp(context, 120)
         ).apply {
             setMargins(Widgets.dp(context, 4), 0, Widgets.dp(context, 4), Widgets.dp(context, 4))
         })
@@ -293,27 +295,19 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
         update()
     }
 
-    private fun onKeypadKey(key: Char) {
+    private fun onKeypadKey(key: String) {
         when (key) {
-            'C' -> {
-                input = "0"
-            }
-            '⌫' -> {
-                if (input.isNotEmpty()) input = input.dropLast(1)
+            "C" -> input = "0"
+            "⌫" -> {
+                input = input.dropLast(1)
                 if (input.isEmpty() || input == "-") input = "0"
             }
-            '±' -> {
-                input = if (input.startsWith("-")) input.substring(1) else "-$input"
-            }
-            '−' -> {
-                if (!input.startsWith("-")) input = "-$input"
-            }
-            else -> {
-                if (key.isDigit()) {
-                    if (input == "0") input = key.toString() else input += key
-                } else if (key == '.') {
-                    if (!input.contains('.')) input += "."
-                }
+            "±" -> input = if (input.startsWith("-")) input.substring(1) else "-$input"
+            "−" -> if (!input.startsWith("-")) input = "-$input"
+            "." -> if (!input.contains('.')) input += "."
+            "00" -> input = if (input == "0") "0" else input + "00"
+            else -> if (key.isNotEmpty() && key[0].isDigit()) {
+                input = if (input == "0") key else input + key
             }
         }
         update()
@@ -330,7 +324,11 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
         lastResult = result
         resultLabel.text = Numbers.format(result)
         resultUnit.text = toUnit.name + "\n" + toUnit.symbol
-        fromLabel.text = host.activity.getString(R.string.converter_all_units, fromUnit.name)
+        fromLabel.text = host.activity.getString(
+            R.string.converter_all_units,
+            fromUnit.name,
+            category.units.size
+        )
         updateUnitList(value)
         updateFavouriteIcon()
         recordHistory()
@@ -410,27 +408,27 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
     /** The physical keypad types straight into the value field. */
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9) {
-            onKeypadKey('0' + (keyCode - KeyEvent.KEYCODE_0))
+            onKeypadKey((keyCode - KeyEvent.KEYCODE_0).toString())
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_PERIOD || keyCode == KeyEvent.KEYCODE_NUMPAD_DOT) {
-            onKeypadKey('.')
+            onKeypadKey(".")
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_DEL) {
-            onKeypadKey('⌫')
+            onKeypadKey("⌫")
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_CLEAR) {
-            onKeypadKey('C')
+            onKeypadKey("C")
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_MINUS) {
-            onKeypadKey('−')
+            onKeypadKey("−")
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_STAR) {
-            onKeypadKey('±')
+            onKeypadKey("±")
             return true
         }
         return false

@@ -299,7 +299,9 @@ class CameraActivity : Activity() {
             )
             val bitmap = BinaryBitmap(HybridBinarizer(source))
             val result = try {
-                zxingReader.decode(bitmap)
+                // the reader is not thread safe, the frame callback and the shutter
+                // button may decode at the same time
+                synchronized(zxingReader) { zxingReader.decode(bitmap) }
             } catch (e: Exception) {
                 null
             }
@@ -343,7 +345,7 @@ class CameraActivity : Activity() {
         }
         val source = com.google.zxing.RGBLuminanceSource(width, height, pixels)
         val result = try {
-            zxingReader.decode(BinaryBitmap(HybridBinarizer(source)))
+            synchronized(zxingReader) { zxingReader.decode(BinaryBitmap(HybridBinarizer(source))) }
         } catch (e: Exception) {
             null
         }

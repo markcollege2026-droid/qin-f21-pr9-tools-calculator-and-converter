@@ -79,7 +79,7 @@ class CalculatorScreen(host: ScreenHost) : Screen(host) {
             ")" to ")", "ans" to "ANS", "%" to "%", "C" to "C", "⌫" to "⌫"
         )
         for ((token, label) in functions) {
-            val button = Widgets.button(context, label, secondary = true)
+            val button = Widgets.compactButton(context, label)
             button.setOnClickListener { press(token) }
             functionRow.addView(button, LinearLayout.LayoutParams(
                 Widgets.dp(context, 44), Widgets.dp(context, 36)

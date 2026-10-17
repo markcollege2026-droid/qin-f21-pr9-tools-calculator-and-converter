@@ -209,9 +209,16 @@ class RecorderScreen(host: ScreenHost) : Screen(host) {
         }
     }
 
+    /** Builds the content URI of a recording inside the app specific directory. */
     private fun androidxstyleUri(file: File): Uri {
         val authority = "${host.activity.packageName}.fileprovider"
-        return Uri.parse("content://$authority/${file.name}")
+        val base = host.activity.getExternalFilesDir(null)
+        val relative = if (base != null) {
+            file.absolutePath.removePrefix(base.absolutePath).trimStart('/')
+        } else {
+            file.name
+        }
+        return Uri.parse("content://$authority/$relative")
     }
 
     override fun onHidden() {

@@ -119,7 +119,7 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
         val presets = Widgets.row(context)
         val presetValues = listOf(1 to "1 min", 3 to "3 min", 5 to "5 min", 10 to "10 min", 25 to "25 min")
         for ((minutes, label) in presetValues) {
-            val button = Widgets.button(context, label, secondary = true)
+            val button = Widgets.compactButton(context, label)
             button.setOnClickListener {
                 hoursField.setText("0")
                 minutesField.setText(minutes.toString())
