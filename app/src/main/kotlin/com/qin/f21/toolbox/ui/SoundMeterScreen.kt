@@ -141,7 +141,12 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
         }
     }
 
+    /** The meter calls back on its capture thread, the views are updated on the UI thread. */
     private fun onLevel(level: SoundLevel) {
+        host.activity.runOnUiThread { render(level) }
+    }
+
+    private fun render(level: SoundLevel) {
         val context = host.activity
         decibelLabel.text = String.format(java.util.Locale.US, "%.1f dB", level.decibels)
         detailLabel.text = context.getString(

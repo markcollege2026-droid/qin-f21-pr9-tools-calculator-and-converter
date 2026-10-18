@@ -28,9 +28,12 @@ echo "[selftest] compiling the pure Kotlin modules"
 find "$ROOT/core/common/src/main/kotlin" \
      "$ROOT/core/conversion/src/main/kotlin" \
      "$ROOT/core/calc/src/main/kotlin" \
+     "$ROOT/core/data/src/main/kotlin" \
      "$ROOT/tools/selftest" -name "*.kt" > "$OUT/sources.txt"
 
-"$KOTLINC" -jvm-target 1.8 -nowarn -d "$OUT/classes" @"$OUT/sources.txt"
+# core/data is compiled against the platform stubs, only the pure parts are executed
+"$KOTLINC" -classpath "$TC/android-30/android.jar" -jvm-target 1.8 -nowarn \
+  -d "$OUT/classes" @"$OUT/sources.txt"
 
 echo "[selftest] running the checks"
 java -cp "$OUT/classes:$KOTLIN_STDLIB" com.qin.f21.toolbox.selftest.Selftest

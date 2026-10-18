@@ -16,7 +16,7 @@ tools/selftest.sh
 Compiles the three pure Kotlin modules (`core/common`, `core/conversion`, `core/calc`)
 plus `tools/selftest/Selftest.kt` with `kotlinc` and runs them on a plain JVM.
 
-**Result: 176 checks, 0 failures.**
+**Result: 183 checks, 0 failures.**
 
 | Area | Covered |
 |------|---------|
@@ -26,6 +26,7 @@ plus `tools/selftest/Selftest.kt` with `kotlinc` and runs them on a plain JVM.
 | Currency | rate lookup, conversion, overrides, currency list |
 | Expression | precedence, parentheses, powers, functions (`sin`, `sqrt`, `ln`, `min`, `max`, `round`, `mod`, `deg`), constants, `ANS`, implicit multiplication, factorial, error handling |
 | Calculators | percentage, price breakdown, bill splitting, BMI, loan, interest, GCD/LCM/primes, Roman numerals, number bases, random numbers, date differences, geometry, travel, cooking |
+| Local store | JSON round trip of a history entry and of a favourite (the import/export format) |
 
 Two real bugs were found and fixed by these tests:
 

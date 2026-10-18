@@ -97,7 +97,7 @@ See [`docs/BUILD.md`](docs/BUILD.md) for details and for the tool-chain download
 ## Testing
 
 ```bash
-tools/selftest.sh             # 176 checks over the pure Kotlin modules
+tools/selftest.sh             # 183 checks over the pure Kotlin modules
 ```
 
 The JSON, conversion, currency, time zone, expression and calculator modules do not use

@@ -60,6 +60,7 @@ class InfraredScreen(host: ScreenHost) : Screen(host) {
         if (!controller.isAvailable) {
             column.addView(unavailableCard())
         } else {
+            statusLabel.text = context.getString(R.string.ir_status_ready)
             column.addView(Widgets.sectionHeader(context, context.getString(R.string.ir_devices)))
             listColumn = Widgets.column(context)
             column.addView(listColumn)

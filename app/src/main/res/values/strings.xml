@@ -129,6 +129,7 @@
     <string name="ir_invalid_code">That is not a valid hex pattern.</string>
     <string name="ir_unavailable_title">No infrared emitter</string>
     <string name="ir_unavailable_message">This device does not report an infrared emitter, so %1$s cannot transmit infrared codes. The bundled code list stays available for reference.</string>
+    <string name="ir_status_ready">Infrared emitter detected on this device.</string>
     <string name="ir_status_missing">Infrared emitter not detected on this device.</string>
 
     <!-- ==================== Sound meter ==================== -->

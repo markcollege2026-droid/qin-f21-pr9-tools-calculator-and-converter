@@ -103,7 +103,9 @@ class CameraActivity : Activity() {
         shutterButton = findViewById(R.id.btn_shutter)
 
         val mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_SCAN
-        overlay.setText(if (mode == MODE_SCAN) getString(R.string.camera_scan_hint) else getString(R.string.camera_photo_hint))
+        runOnUiThread {
+            overlay.setText(if (mode == MODE_SCAN) getString(R.string.camera_scan_hint) else getString(R.string.camera_photo_hint))
+        }
         shutterButton.setOnClickListener { if (mode == MODE_SCAN) decodeCurrentFrame() else capturePhoto() }
         torchButton.setOnClickListener { toggleTorch() }
         findViewById<View>(R.id.btn_close).setOnClickListener { finish() }
@@ -122,7 +124,9 @@ class CameraActivity : Activity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openCamera()
             } else {
-                overlay.setText(getString(R.string.camera_permission_denied))
+                runOnUiThread {
+                    overlay.setText(getString(R.string.camera_permission_denied))
+                }
             }
         }
     }
@@ -208,11 +212,15 @@ class CameraActivity : Activity() {
                 override fun onError(camera: CameraDevice, error: Int) {
                     camera.close()
                     cameraDevice = null
-                    overlay.setText(getString(R.string.camera_error))
+                    runOnUiThread {
+                        overlay.setText(getString(R.string.camera_error))
+                    }
                 }
             }, backgroundHandler)
         } catch (e: Exception) {
-            overlay.setText(getString(R.string.camera_error))
+            runOnUiThread {
+                overlay.setText(getString(R.string.camera_error))
+            }
         }
     }
 
@@ -244,11 +252,15 @@ class CameraActivity : Activity() {
                 }
 
                 override fun onConfigureFailed(session: CameraCaptureSession) {
-                    overlay.setText(getString(R.string.camera_error))
+                    runOnUiThread {
+                        overlay.setText(getString(R.string.camera_error))
+                    }
                 }
             }, backgroundHandler)
         } catch (e: Exception) {
-            overlay.setText(getString(R.string.camera_error))
+            runOnUiThread {
+                overlay.setText(getString(R.string.camera_error))
+            }
         }
     }
 
@@ -273,7 +285,9 @@ class CameraActivity : Activity() {
             )
         } catch (e: Exception) {
             torchOn = false
-            overlay.setText(getString(R.string.camera_no_torch))
+            runOnUiThread {
+                overlay.setText(getString(R.string.camera_no_torch))
+            }
         }
     }
 
@@ -309,8 +323,11 @@ class CameraActivity : Activity() {
                 val data2 = Intent()
                 data2.putExtra(RESULT_TEXT, result.text)
                 data2.putExtra(RESULT_FORMAT, result.barcodeFormat.name)
-                setResult(Activity.RESULT_OK, data2)
-                finish()
+                // the frame callback runs on the camera thread
+                runOnUiThread {
+                    setResult(Activity.RESULT_OK, data2)
+                    finish()
+                }
             }
         } catch (e: Exception) {
             // ignore single frame errors
@@ -356,7 +373,9 @@ class CameraActivity : Activity() {
             setResult(Activity.RESULT_OK, data)
             finish()
         } else {
-            overlay.setText(getString(R.string.camera_no_code))
+            runOnUiThread {
+                overlay.setText(getString(R.string.camera_no_code))
+            }
         }
     }
 
@@ -385,10 +404,14 @@ class CameraActivity : Activity() {
                     file.outputStream().use { it.write(bytes) }
                     val data = Intent()
                     data.putExtra(RESULT_PATH, file.absolutePath)
-                    setResult(Activity.RESULT_OK, data)
-                    finish()
+                    runOnUiThread {
+                        setResult(Activity.RESULT_OK, data)
+                        finish()
+                    }
                 } catch (e: Exception) {
-                    overlay.setText(getString(R.string.camera_error))
+                    runOnUiThread {
+                        overlay.setText(getString(R.string.camera_error))
+                    }
                 } finally {
                     try {
                         image.close()
@@ -413,18 +436,24 @@ class CameraActivity : Activity() {
                         try {
                             session.capture(request.build(), null, backgroundHandler)
                         } catch (e: Exception) {
-                            overlay.setText(getString(R.string.camera_error))
+                            runOnUiThread {
+                                overlay.setText(getString(R.string.camera_error))
+                            }
                         }
                     }
 
                     override fun onConfigureFailed(session: CameraCaptureSession) {
-                        overlay.setText(getString(R.string.camera_error))
+                        runOnUiThread {
+                            overlay.setText(getString(R.string.camera_error))
+                        }
                     }
                 },
                 backgroundHandler
             )
         } catch (e: Exception) {
-            overlay.setText(getString(R.string.camera_error))
+            runOnUiThread {
+                overlay.setText(getString(R.string.camera_error))
+            }
         }
     }
 

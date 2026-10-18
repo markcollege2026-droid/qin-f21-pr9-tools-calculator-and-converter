@@ -15,6 +15,8 @@ import com.qin.f21.toolbox.core.calc.RandomCalculator
 import com.qin.f21.toolbox.core.calc.TravelCalculator
 import com.qin.f21.toolbox.core.common.Json
 import com.qin.f21.toolbox.core.common.JsonParser
+import com.qin.f21.toolbox.core.data.Favorite
+import com.qin.f21.toolbox.core.data.HistoryEntry
 import com.qin.f21.toolbox.core.common.JsonWriter
 import com.qin.f21.toolbox.core.common.Numbers
 import com.qin.f21.toolbox.core.conversion.ConversionEngine
@@ -44,6 +46,7 @@ object Selftest {
         expressionTests()
         calculatorTests()
         geometryTests()
+        storeTests()
 
         println()
         println("checks : $checks")
@@ -250,6 +253,33 @@ object Selftest {
         check("date.totalHours", 177096L, difference.totalHours)
 
         check("date.add", LocalDate.of(2020, 3, 15), DateCalculator.add(LocalDate.of(2020, 1, 15), 0, 2, 0))
+    }
+
+    private fun storeTests() {
+        val entry = HistoryEntry(
+            toolId = "converter",
+            toolName = "Unit converter",
+            title = "1 km = 0.621 mi",
+            summary = "Length · Kilometre → Mile"
+        )
+        val json = entry.toJson()
+        val restored = HistoryEntry.fromJson(json)
+        checkTrue("store.history.restored", restored != null)
+        check("store.history.toolId", "converter", restored?.toolId)
+        check("store.history.title", "1 km = 0.621 mi", restored?.title)
+        check("store.history.timestamp", entry.timestamp, restored?.timestamp)
+
+        val favorite = Favorite(
+            toolId = "converter",
+            title = "Length: km → mi",
+            subtitle = "Length",
+            payload = "length:km:mi"
+        )
+        val favoriteJson = favorite.toJson()
+        val restoredFavorite = Favorite.fromJson(favoriteJson)
+        checkTrue("store.favorite.restored", restoredFavorite != null)
+        check("store.favorite.payload", "length:km:mi", restoredFavorite?.payload)
+        check("store.favorite.title", "Length: km → mi", restoredFavorite?.title)
     }
 
     private fun geometryTests() {
