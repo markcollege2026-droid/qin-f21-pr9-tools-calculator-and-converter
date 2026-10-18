@@ -142,10 +142,26 @@ jobs:
           grep -nE "Exception is:|Caused by:|^org\.|^java\.|OutOfMemoryError|OutOfMemory" "$L" 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /'
           echo "GRADLE_ERROR === kotlin/javac error lines (e:/error:/Unresolved) ==="
           grep -nE "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /'
-          echo "GRADLE_ERROR === lint issues (rule tags) ==="
-          grep -nE "\[[A-Z][A-Za-z]+\]( \(Fatal\))?" "$L" 2>/dev/null | grep -vE "^\s*$|warning|Warning" | head -25 | sed 's/^/GRADLE_ERROR /'
-          echo "GRADLE_ERROR === lint urgent issues section ==="
-          sed -n '/urgent issues need to be addressed/,/For more information/p' "$L" 2>/dev/null | head -40 | sed 's/^/GRADLE_ERROR /'
+          # AGP 7.4 prints only "Lint found fatal errors" to the console; the issues
+          # themselves live in the XML report - parse it here.
+          X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1)
+          if [ -n "$X" ]; then
+            echo "GRADLE_ERROR === lint report: $X ==="
+            grep -oE '<issue id="[A-Za-z0-9]+"' "$X" | sort | uniq -c | sort -rn | head -10 | sed 's/^/GRADLE_ERROR /'
+            python3 - "$X" 2>/dev/null <<'PY'
+import sys, xml.etree.ElementTree as ET
+t = ET.parse(sys.argv[1]); n = 0
+for iss in t.getroot().iter('issue'):
+    if iss.get('severity') in ('Error', 'Fatal'):
+        locs = [(l.get('file'), l.get('line')) for l in iss.findall('location')]
+        print("GRADLE_ERROR LINT %s: %s @ %s" % (iss.get('id'), (iss.findtext('message') or '')[:140], locs[:2]))
+        n += 1
+        if n >= 10:
+            break
+PY
+          else
+            echo "GRADLE_ERROR (no lint xml report found under app/build)"
+          fi
           echo "GRADLE_ERROR === failed tasks ==="
           grep -nE "^> Task .*FAILED" "$L" 2>/dev/null | head -10 | sed 's/^/GRADLE_ERROR /'
           echo "GRADLE_ERROR === tail (last 30) ==="
