@@ -73,6 +73,7 @@ The signature was verified with `apksigner verify --print-certs` (v1 + v2 + v3).
 | Camera2 preview, QR decoding, photo capture | **not executed** | needs a real camera |
 | Torch, IR emitter, GNSS, microphone | **not executed** | need the real hardware |
 | D-pad and T9 keypad navigation | **implemented, not exercised** | needs a device |
+| Timer alarm while another tool is open | **implemented, not exercised** | needs a device; the state lives in `Timers`, so it is no longer tied to the screen |
 | Gradle build | **not executed** | no Gradle distribution, no access to the Google/Maven repositories |
 | Installed size on a device | **estimated** | the APK size is measured; the installed size is derived from it (see `README.md`) |
 
@@ -91,7 +92,8 @@ adb logcat | grep -i toolbox
 
 Checklist: every screen shows a focus ring on its first control as soon as it opens, the
 home screen scrolls with the D-pad, digits open the first nine tools, the
-converter accepts hardware keypad digits, the timer and the stopwatch survive the screen
-being turned off, the scanner decodes a printed QR code, the sound meter reacts to a
+converter accepts hardware keypad digits, a running countdown keeps counting after
+leaving the Timer screen and still vibrates and notifies when it ends, the stopwatch keeps
+its time and laps across screens and survives the screen being turned off, the scanner decodes a printed QR code, the sound meter reacts to a
 sound, GPS locks onto a position and the infrared screen either shows the code list or
 the "no emitter" state.

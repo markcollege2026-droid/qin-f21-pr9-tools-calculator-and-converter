@@ -1,6 +1,5 @@
 package com.qin.f21.toolbox.ui
 
-import android.os.SystemClock
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
@@ -10,22 +9,19 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.qin.f21.toolbox.R
+import com.qin.f21.toolbox.Timers
 import com.qin.f21.toolbox.core.calc.DurationFormatter
 
 /**
  * Stopwatch with lap times.
  *
- * The timer is based on [SystemClock.elapsedRealtime], so it keeps running accurately even
- * when the screen is off or the device is busy.
+ * The stopwatch lives in [Timers] and is based on `SystemClock.elapsedRealtime`, so it keeps
+ * running accurately when the user opens another tool, turns the screen off or the device
+ * is busy. The screen only renders it.
  */
 class StopwatchScreen(host: ScreenHost) : Screen(host) {
 
     override val title: String = "Stopwatch"
-
-    private var running = false
-    private var baseElapsed = 0L
-    private var startedAt = 0L
-    private val laps = ArrayList<Long>()
 
     private lateinit var timeLabel: TextView
     private lateinit var statusLabel: TextView
@@ -33,15 +29,8 @@ class StopwatchScreen(host: ScreenHost) : Screen(host) {
     private lateinit var startButton: android.widget.Button
     private lateinit var lapButton: android.widget.Button
     private lateinit var resetButton: android.widget.Button
+    private var renderedLaps = 0
 
-    private val ticker = object : Runnable {
-        override fun run() {
-            updateDisplay()
-            if (running) {
-                host.activity.window.decorView.postDelayed(this, 33)
-            }
-        }
-    }
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
@@ -98,48 +87,50 @@ class StopwatchScreen(host: ScreenHost) : Screen(host) {
         return root
     }
 
-    private fun elapsed(): Long = baseElapsed + if (running) SystemClock.elapsedRealtime() - startedAt else 0L
-
     private fun toggle() {
-        if (running) {
-            baseElapsed = elapsed()
-            running = false
-            startButton.text = host.activity.getString(R.string.action_start)
-            statusLabel.text = host.activity.getString(R.string.stopwatch_paused)
-            host.activity.window.decorView.removeCallbacks(ticker)
-        } else {
-            startedAt = SystemClock.elapsedRealtime()
-            running = true
-            startButton.text = host.activity.getString(R.string.action_stop)
-            statusLabel.text = host.activity.getString(R.string.stopwatch_running)
-            host.activity.window.decorView.post(ticker)
-        }
+        if (Timers.stopwatchRunning) Timers.pauseStopwatch() else Timers.startStopwatch()
+        updateState()
         updateLaps()
     }
 
     private fun lap() {
-        if (!running) return
-        laps.add(elapsed())
+        if (!Timers.stopwatchRunning) return
+        Timers.addLap()
         updateLaps()
     }
 
     private fun reset() {
-        running = false
-        baseElapsed = 0
-        laps.clear()
-        startButton.text = host.activity.getString(R.string.action_start)
-        statusLabel.text = host.activity.getString(R.string.stopwatch_ready)
-        host.activity.window.decorView.removeCallbacks(ticker)
-        updateDisplay()
+        Timers.resetStopwatch()
+        updateState()
         updateLaps()
     }
 
     private fun updateDisplay() {
-        timeLabel.text = DurationFormatter.formatStopwatch(elapsed())
+        if (!this::timeLabel.isInitialized) return
+        timeLabel.text = DurationFormatter.formatStopwatch(Timers.stopwatchElapsed())
+        updateState()
+    }
+
+    private fun updateState() {
+        if (!this::startButton.isInitialized) return
+        val running = Timers.stopwatchRunning
+        startButton.text = host.activity.getString(
+            if (running) R.string.action_stop else R.string.action_start
+        )
+        lapButton.isEnabled = running
+        resetButton.isEnabled = running || Timers.stopwatchElapsed() > 0L
+        statusLabel.text = host.activity.getString(
+            when {
+                running -> R.string.stopwatch_running
+                Timers.stopwatchElapsed() > 0L -> R.string.stopwatch_paused
+                else -> R.string.stopwatch_ready
+            }
+        )
     }
 
     private fun updateLaps() {
         lapColumn.removeAllViews()
+        val laps = Timers.laps()
         if (laps.isEmpty()) {
             lapColumn.addView(Widgets.caption(host.activity, host.activity.getString(R.string.stopwatch_no_laps)))
             return
@@ -193,7 +184,20 @@ class StopwatchScreen(host: ScreenHost) : Screen(host) {
         return false
     }
 
+    override fun onShown() {
+        Timers.onStopwatchChanged = {
+            updateDisplay()
+            if (Timers.laps().size != renderedLaps) {
+                renderedLaps = Timers.laps().size
+                updateLaps()
+            }
+        }
+        renderedLaps = Timers.laps().size
+        updateDisplay()
+        updateLaps()
+    }
+
     override fun onHidden() {
-        host.activity.window.decorView.removeCallbacks(ticker)
+        if (Timers.onStopwatchChanged != null) Timers.onStopwatchChanged = null
     }
 }

@@ -88,3 +88,11 @@ container only becomes a stop on read-only screens such as Diagnostics and About
 it then scrolls with the arrow keys. The header back arrow is deliberately *not* a focus
 stop, so Enter on a freshly opened tool never navigates away; the physical Back key
 handles that.
+
+## Limits that are not hardware dependent
+
+* The countdown keeps running while the app is alive, including when the screen is off or
+  another tool is open, and fires a vibration plus a notification. It does **not** survive
+  the process being killed by the system: the toolbox deliberately has no foreground
+  service, so there is no permanent notification and no second process. Treat a timer as
+  reliable while the app is running, which is the normal case on a phone that stays awake.

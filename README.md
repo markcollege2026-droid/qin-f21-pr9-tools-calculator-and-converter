@@ -119,8 +119,8 @@ still unverified.
 
 | Item | Size |
 |------|------|
-| Signed APK | **1.10 MiB** (1,157,190 bytes) |
-| `classes.dex` | 3.03 MB (1.01 MB compressed inside the APK) |
+| Signed APK | **1.11 MiB** (1,161,286 bytes) |
+| `classes.dex` | 3.05 MB (1.02 MB compressed inside the APK) |
 | Compiled resources | 34.5 KB |
 | Bundled assets (rates, IR codes) | 1.1 KB |
 | Uncompressed payload | 3.17 MB |

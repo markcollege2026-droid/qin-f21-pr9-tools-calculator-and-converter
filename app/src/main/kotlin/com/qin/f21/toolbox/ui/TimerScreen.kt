@@ -1,12 +1,5 @@
 package com.qin.f21.toolbox.ui
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.os.SystemClock
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
@@ -14,26 +7,20 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.qin.f21.toolbox.MainActivity
 import com.qin.f21.toolbox.R
-import com.qin.f21.toolbox.Toolbox
+import com.qin.f21.toolbox.Timers
 import com.qin.f21.toolbox.core.calc.DurationFormatter
 
 /**
  * Countdown timer.
  *
- * The countdown is based on [SystemClock.elapsedRealtime]. When it reaches zero the device
- * vibrates and a notification is posted (Android 11 requires the notification permission
- * for API 33+, which the app asks for when a timer is started).
+ * The countdown itself lives in [Timers], based on `SystemClock.elapsedRealtime`, so it
+ * keeps running when the user opens another tool or turns the screen off. When it reaches
+ * zero the device vibrates and a notification is posted.
  */
 class TimerScreen(host: ScreenHost) : Screen(host) {
 
     override val title: String = "Timer"
-
-    private var totalMillis = 5 * 60 * 1000L
-    private var remaining = totalMillis
-    private var running = false
-    private var endAt = 0L
 
     private lateinit var timeLabel: TextView
     private lateinit var statusLabel: TextView
@@ -42,20 +29,6 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
     private lateinit var hoursField: EditText
     private lateinit var minutesField: EditText
     private lateinit var secondsField: EditText
-    private var finished = false
-
-    private val ticker = object : Runnable {
-        override fun run() {
-            if (!running) return
-            remaining = endAt - SystemClock.elapsedRealtime()
-            if (remaining <= 0) {
-                remaining = 0
-                finish()
-            }
-            updateDisplay()
-            host.activity.window.decorView.postDelayed(this, 100)
-        }
-    }
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
@@ -85,9 +58,9 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
         hoursField = Widgets.numericField(context, "0")
         minutesField = Widgets.numericField(context, "5")
         secondsField = Widgets.numericField(context, "0")
-        hoursField.setText("0")
-        minutesField.setText("5")
-        secondsField.setText("0")
+        hoursField.setText((Timers.countdownTotal / 3_600_000L).toString())
+        minutesField.setText((Timers.countdownTotal / 60_000L % 60L).toString())
+        secondsField.setText((Timers.countdownTotal / 1000L % 60L).toString())
         inputRow.addView(hoursField, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         inputRow.addView(Widgets.text(context, "h", R.style.Text_Caption), LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -141,83 +114,45 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
         val hours = (hoursField.text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
         val minutes = (minutesField.text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
         val seconds = (secondsField.text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
-        totalMillis = (hours * 3600L + minutes * 60L + seconds) * 1000L
-        remaining = totalMillis
-        finished = false
+        Timers.setCountdownDuration((hours * 3600L + minutes * 60L + seconds) * 1000L)
         updateDisplay()
     }
 
     private fun toggle() {
-        if (running) {
-            remaining = endAt - SystemClock.elapsedRealtime()
-            running = false
-            host.activity.window.decorView.removeCallbacks(ticker)
-            startButton.text = host.activity.getString(R.string.action_start)
-            statusLabel.text = host.activity.getString(R.string.timer_paused)
+        if (Timers.countdownRunning) {
+            Timers.pauseCountdown()
         } else {
-            if (remaining <= 0) readInput()
-            if (remaining <= 0) {
+            if (Timers.countdownRemaining() <= 0L) readInput()
+            if (Timers.countdownRemaining() <= 0L) {
                 host.showMessage(host.activity.getString(R.string.timer_set_duration))
                 return
             }
-            endAt = SystemClock.elapsedRealtime() + remaining
-            running = true
-            startButton.text = host.activity.getString(R.string.action_pause)
-            statusLabel.text = host.activity.getString(R.string.timer_running)
-            host.activity.window.decorView.post(ticker)
+            Timers.startCountdown()
         }
+        updateDisplay()
     }
 
     private fun reset() {
-        running = false
-        finished = false
-        host.activity.window.decorView.removeCallbacks(ticker)
         readInput()
-        startButton.text = host.activity.getString(R.string.action_start)
-        statusLabel.text = host.activity.getString(R.string.timer_ready)
+        Timers.resetCountdown()
+        updateDisplay()
     }
 
-    private fun finish() {
-        running = false
-        finished = true
-        startButton.text = host.activity.getString(R.string.action_start)
-        statusLabel.text = host.activity.getString(R.string.timer_finished)
-        Toolbox.capabilities.vibrate(600)
-        notifyFinished()
-    }
-
-    private fun notifyFinished() {
-        try {
-            val manager = host.activity.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-                ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID,
-                    host.activity.getString(R.string.timer_channel),
-                    NotificationManager.IMPORTANCE_HIGH
-                )
-                manager.createNotificationChannel(channel)
-            }
-            val intent = Intent(host.activity, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            val pending = PendingIntent.getActivity(
-                host.activity, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            val notification = android.app.Notification.Builder(host.activity, CHANNEL_ID)
-                .setContentTitle(host.activity.getString(R.string.timer_notification_title))
-                .setContentText(host.activity.getString(R.string.timer_notification_text))
-                .setSmallIcon(R.drawable.ic_timer)
-                .setAutoCancel(true)
-                .setContentIntent(pending)
-                .build()
-            manager.notify(NOTIFICATION_ID, notification)
-        } catch (e: Exception) {
-            // notifications are optional
-        }
-    }
 
     private fun updateDisplay() {
+        if (!this::timeLabel.isInitialized) return
+        val remaining = Timers.countdownRemaining()
+        startButton.text = host.activity.getString(
+            if (Timers.countdownRunning) R.string.action_pause else R.string.action_start
+        )
+        statusLabel.text = host.activity.getString(
+            when {
+                Timers.countdownRunning -> R.string.timer_running
+                Timers.countdownFinished -> R.string.timer_finished
+                remaining != Timers.countdownTotal -> R.string.timer_paused
+                else -> R.string.timer_ready
+            }
+        )
         timeLabel.text = DurationFormatter.format(remaining)
         timeLabel.setTextColor(
             Widgets.color(
@@ -240,12 +175,15 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
         return false
     }
 
-    override fun onHidden() {
-        host.activity.window.decorView.removeCallbacks(ticker)
+    override fun onShown() {
+        // The countdown keeps running without the screen, so the fields catch up here.
+        Timers.onCountdownChanged = { updateDisplay() }
+        Timers.onCountdownElapsed = { updateDisplay() }
+        updateDisplay()
     }
 
-    companion object {
-        private const val CHANNEL_ID = "timer"
-        private const val NOTIFICATION_ID = 42
+    override fun onHidden() {
+        if (Timers.onCountdownChanged != null) Timers.onCountdownChanged = null
+        if (Timers.onCountdownElapsed != null) Timers.onCountdownElapsed = null
     }
 }

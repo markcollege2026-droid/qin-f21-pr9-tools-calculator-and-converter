@@ -105,8 +105,11 @@ cannot express, and no horizontal scrolling is required for the primary flow of 
 
 * One screen is inflated at a time; the previous one is removed from the view tree, so
   the memory footprint stays small.
-* The stopwatch and the timer refresh on the main thread with a 33 ms / 100 ms ticker
-  and stop as soon as the screen is hidden.
+* The countdown and the stopwatch keep their state in the app level `Timers` object, not
+  in their screens. The screen is only a renderer, so opening another tool no longer
+  cancels a running countdown; the alarm is raised by the timer itself. The ticker stops
+  when neither is running. There is no foreground service on purpose, so the alarm does
+  not survive the process being killed - a documented limitation, not an accident.
 * The sound meter and the recorder run their capture loop on a background thread and
   post the level to the UI.
 * The scanner decodes the camera frames on a background handler thread.
