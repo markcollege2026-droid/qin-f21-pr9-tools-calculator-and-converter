@@ -79,8 +79,12 @@ with two jobs:
 * **Gradle build** –
   1. JDK 17 (Temurin) and the Android SDK (platform 30 + build-tools 33.0.1) via
      `setup-java` / `setup-android`;
-  2. `./gradlew :app:assembleDebug :app:assembleRelease` (the wrapper and the Gradle
-     dependency cache are maintained by `gradle/actions/setup-gradle`);
+  2. `./gradlew :app:lintRelease :app:assembleDebug :app:assembleRelease` (the wrapper
+     and the Gradle dependency cache are maintained by `gradle/actions/setup-gradle`).
+     The plain `lintRelease` task runs first because the automatic `lintVitalRelease`
+     gate inside `assembleRelease` fails without writing a report or listing the issues;
+     a failing lint run additionally re-runs the task with `abortOnError=false` so the
+     full report is produced and the fatal findings are surfaced as annotations;
   3. the debug and release APKs are uploaded as build artefacts.
 
 ### Debug key

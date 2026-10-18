@@ -111,14 +111,11 @@ jobs:
           # turns them into annotations (readable without the full log).
           set -o pipefail
           set +e
-          # :app:printSources is a diagnostic that dumps the resolved source roots of
-          # every compiler (and whether they exist) so failures are provable, not
-          # guessable.
           # :app:lintRelease runs BEFORE the assembles: the automatic lintVitalRelease
-          # gate that assembleRelease depends on fails silently (no report, no issue
-          # list), while the plain lint task prints the issues and writes the XML.
+          # gate that assembleRelease depends on fails with no report and no issue
+          # list, while the plain lint task prints the issues and writes the XML.
           ./gradlew --no-daemon \
-            :app:printSources :app:lintRelease :app:assembleDebug :app:assembleRelease \
+            :app:lintRelease :app:assembleDebug :app:assembleRelease \
             -Pkotlin.compiler.execution.strategy=in-process \
             --stacktrace 2>&1 | tee gradle-build.log | awk '
             /^GRADLE_ERROR / { print; next }  # already tagged (diagnostic task, earlier steps)
