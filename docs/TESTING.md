@@ -18,6 +18,10 @@ plus `tools/selftest/Selftest.kt` with `kotlinc` and runs them on a plain JVM.
 
 **Result: 183 checks, 0 failures.**
 
+The self test (and the offline build below) also runs in CI on every push and pull
+request – see `.github/workflows/build.yml` and `docs/BUILD.md`, section "Continuous
+integration".
+
 | Area | Covered |
 |------|---------|
 | JSON | parsing, nested objects, arrays, defaults, writer round trip |

@@ -76,8 +76,14 @@ log "linking resources"
 log "compiling Java sources (R class + ZXing core)"
 find "$BUILD/gen" -name "*.java" > "$BUILD/gen-sources.txt"
 find "$ROOT/third_party" -name "*.java" >> "$BUILD/gen-sources.txt"
-javac -nowarn -encoding UTF-8 -source 8 -target 8 -bootclasspath "$ANDROID_JAR" \
-  -d "$BUILD/rclasses" @"$BUILD/gen-sources.txt" 2>&1 | grep -v "bootstrap class path" | head -20 || true
+[ -s "$BUILD/gen-sources.txt" ] || fail "no Java sources found"
+mkdir -p "$BUILD/rclasses"
+if ! javac -nowarn -encoding UTF-8 -source 8 -target 8 \
+      -bootclasspath "$ANDROID_JAR" \
+      -d "$BUILD/rclasses" @"$BUILD/gen-sources.txt" > "$BUILD/javac.log" 2>&1; then
+  cat "$BUILD/javac.log"
+  fail "javac failed"
+fi
 
 # --- 4. compile the Kotlin sources ------------------------------------------
 log "compiling Kotlin sources"
@@ -87,7 +93,7 @@ find "$ROOT"/core/*/src/main/kotlin "$APP/src/main/kotlin" -name "*.kt" > "$BUIL
   -classpath "$ANDROID_JAR:$BUILD/rclasses" \
   -jvm-target 1.8 \
   -nowarn \
-  -Xjvm-default=all \
+  -jvm-default=enable \
   -d "$BUILD/classes" \
   @"$BUILD/kt-sources.txt"
 

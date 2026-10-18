@@ -2,7 +2,8 @@
 
 The project can be built in two ways. Both produce the same application; the offline
 pipeline exists because the build environment used for this work had no Android SDK and
-no access to `maven.google.com`.
+no access to `maven.google.com`. The offline pipeline is the one executed in CI
+(see "Continuous integration" below) and is the verified path.
 
 ---
 
@@ -38,8 +39,11 @@ At the end the script prints the measured size report.
 | `apksigner.jar` | 0.9 | GitHub `warren-bank/print-apk-signature` |
 | `android-30/android.jar` | API 30 platform stub | GitHub `Sable/android-platforms` |
 
-`tools/fetch-toolchain.sh` repeats those downloads; the archives are cached in `/tmp`
-when they are already present.
+`tools/fetch-toolchain.sh` is idempotent: every component is verified right after
+download and is only skipped when a `.done-*` marker file proves that a previous run
+completed it, so an interrupted or partially cached tool-chain is re-fetched instead of
+being trusted. All versions are pinned (see the script header) so the build is
+reproducible.
 
 ### Notes and gotchas
 
@@ -47,10 +51,31 @@ when they are already present.
   script unpacks the archives before linking.
 * `d8` refuses directories – the script jars the class folders first.
 * `javac` needs `-encoding UTF-8` because the ZXing sources contain non-ASCII characters.
+  A `javac` failure aborts the build (the compiler output is printed); an earlier
+  revision of the script swallowed compiler errors, which turned a broken `R.java` into a
+  confusing Kotlin compile failure.
+* The Kotlin flag is `-jvm-default=enable`: the old `-Xjvm-default=all` mode was removed
+  in Kotlin 2.2, and the tool-chain is pinned to 2.4.21. The code base contains no
+  `@JvmDefault` annotation, so `enable` produces the same bytecode as the old `all`.
+* The JDK from the `jdk11` npm package is a full JDK (it ships `javac`, `jar` and
+  `keytool`); a bare JRE is not enough for this pipeline.
 * `apksigner` needs an existing `build/outputs` directory.
 * `zipalign` is not part of the pipeline (the binary that could be downloaded needs a
   `libc++.so` that is not available). The APK is still valid and installable; the
   alignment is only an optimisation.
+
+### Continuous integration
+
+`.github/workflows/build.yml` runs on every push to `main` and on every pull request:
+
+1. `tools/fetch-toolchain.sh` – pinned, verified tool-chain (cached with
+   `actions/cache` keyed on the fetch script);
+2. `tools/selftest.sh` – the 183 pure-Kotlin checks;
+3. `tools/build-offline.sh` – the signed APK;
+4. `apksigner verify` on the artefact, then the APK is uploaded as a build artefact.
+
+CI therefore only ever exercises the offline pipeline; the Gradle build (below) is not
+run in CI.
 
 ### Debug key
 

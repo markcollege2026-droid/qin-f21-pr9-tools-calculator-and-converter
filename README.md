@@ -1,5 +1,7 @@
 # Qin F21 Toolbox
 
+[![Build](https://github.com/markcollege2026-droid/qin-f21-pr9-tools-calculator-and-converter/actions/workflows/build.yml/badge.svg)](https://github.com/markcollege2026-droid/qin-f21-pr9-tools-calculator-and-converter/actions/workflows/build.yml)
+
 An **offline utility toolbox** for the Qin F21 Pro (Xiaomi Qin F21 Pro, 2.8" 480 × 640,
 Android 11 / API 30). The app contains 21 tools in five categories, uses no third party
 runtime dependency, has **no `INTERNET` permission** and never contacts a server.
@@ -86,9 +88,11 @@ of the running app.
 
 ## Building
 
-Two build paths are supported, both produce the same app.
+Two build paths are supported, both produce the same app. The offline pipeline is what
+runs in CI (`.github/workflows/build.yml`): self test + signed APK on every push and
+pull request.
 
-### 1. Offline pipeline (no Android SDK needed)
+### 1. Offline pipeline (no Android SDK needed, used by CI)
 
 ```bash
 tools/fetch-toolchain.sh     # one time: JDK 11, kotlinc, aapt2, d8, apksigner

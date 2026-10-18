@@ -1,0 +1,53 @@
+# Continuous integration for the Qin F21 Toolbox.
+#
+# Runs the offline pipeline end to end (no Android SDK needed):
+#   1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner, android.jar)
+#   2. self test the pure Kotlin modules (183 checks)
+#   3. compile, dex, package and sign the APK
+#   4. verify the signature and upload the APK as an artefact
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  selftest-and-build:
+    name: Self test + offline APK build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache offline tool-chain
+        uses: actions/cache@v4
+        with:
+          path: tools/toolchain
+          key: toolchain-v1-${{ hashFiles('tools/fetch-toolchain.sh') }}
+          restore-keys: |
+            toolchain-v1-
+
+      - name: Fetch offline tool-chain
+        run: tools/fetch-toolchain.sh
+
+      - name: Run self test (pure Kotlin modules, 183 checks)
+        run: tools/selftest.sh
+
+      - name: Build and sign APK (offline pipeline)
+        run: tools/build-offline.sh
+
+      - name: Verify APK signature
+        run: |
+          TC=tools/toolchain
+          "$TC/jdk/bin/java" -cp "$TC/apksigner.jar" \
+            com.android.apksigner.ApkSignerTool verify --print-certs \
+            build/outputs/qin-f21-toolbox-1.0.0.apk
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: qin-f21-toolbox-1.0.0.apk
+          path: build/outputs/qin-f21-toolbox-1.0.0.apk
+          if-no-files-found: error
