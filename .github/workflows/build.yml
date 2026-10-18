@@ -101,7 +101,7 @@ jobs:
             ]
           }
           EOF
-          echo "::add-matcher::$(cat matcher.json)"
+          echo "::add-matcher::$GITHUB_WORKSPACE/matcher.json"
 
       - name: Check Gradle configuration (./gradlew help)
         run: |
