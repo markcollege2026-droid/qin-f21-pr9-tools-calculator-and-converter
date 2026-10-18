@@ -123,6 +123,7 @@ jobs:
             /Caused by:/ || /Exception is:/ || /^e: / || /error: / ||
             /> Task .* FAILED/ || /Missing class/ || /OutOfMemory/ ||
             /exited unexpectedly/ || /The build process/ || /SDK location not found/ ||
+            / Error: .* \[[A-Z][A-Za-z]+\]/ || /fatal errors/ ||
             /^[[:space:]]*> (A failure|Could not|No |The |Execution)/ {
               print "GRADLE_ERROR " $0
             }'
@@ -141,6 +142,10 @@ jobs:
           grep -nE "Exception is:|Caused by:|^org\.|^java\.|OutOfMemoryError|OutOfMemory" "$L" 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /'
           echo "GRADLE_ERROR === kotlin/javac error lines (e:/error:/Unresolved) ==="
           grep -nE "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === lint issues (rule tags) ==="
+          grep -nE "\[[A-Z][A-Za-z]+\]( \(Fatal\))?" "$L" 2>/dev/null | grep -vE "^\s*$|warning|Warning" | head -25 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === lint urgent issues section ==="
+          sed -n '/urgent issues need to be addressed/,/For more information/p' "$L" 2>/dev/null | head -40 | sed 's/^/GRADLE_ERROR /'
           echo "GRADLE_ERROR === failed tasks ==="
           grep -nE "^> Task .*FAILED" "$L" 2>/dev/null | head -10 | sed 's/^/GRADLE_ERROR /'
           echo "GRADLE_ERROR === tail (last 30) ==="
