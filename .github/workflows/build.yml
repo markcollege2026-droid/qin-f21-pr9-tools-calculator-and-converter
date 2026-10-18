@@ -147,15 +147,30 @@ jobs:
           awk '/What went wrong/{f=1;next} f && /^$/{exit} f{print}' "$L" 2>/dev/null | head -8 | sed 's/^/WW: /' >> "$F" || true
           grep -E "Exception is:|Caused by:|^org\.|^java\.|OutOfMemory" "$L" 2>/dev/null | head -4 | sed 's/^/EXC: /' >> "$F" || true
           grep -E "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -8 | sed 's/^/ERR: /' >> "$F" || true
+          # A fatal lint run aborts BEFORE the report is finished: the XML exists but
+          # has no issue elements, and the console prints no issue list. Re-run the
+          # lint task with abortOnError=false so it completes: it then prints every
+          # finding to the console and writes the full report.
+          cat > /tmp/lint-nofail.gradle <<'EOF'
+          allprojects {
+              plugins.withId("com.android.application") {
+                  android {
+                      lintOptions {
+                          abortOnError false
+                      }
+                  }
+              }
+          }
+          EOF
+          ./gradlew --no-daemon -I /tmp/lint-nofail.gradle :app:lintRelease 2>&1 \
+            | grep -E "Error: |Fatal: " | head -15 | sed 's/^/LINT run: /' >> "$F" || true
           # AGP 7.4 prints only "Lint found fatal errors" to the console; the issues
           # themselves live in the XML report - summarize it here.
           X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1 || true)
           if [ -n "$X" ]; then
-            echo "lint report: $X" >> "$F"
-            # lint XML tags span multiple lines, so flatten before grepping
-            FLAT=$(tr '\n' ' ' < "$X" 2>/dev/null) || true
-            printf '%s' "$FLAT" | grep -oE '<issue id="[A-Za-z0-9]+" severity="[A-Za-z]+"' | sort | uniq -c | sort -rn | head -8 | sed 's/^/LINT count: /' >> "$F" || true
-            printf '%s' "$FLAT" | grep -oE '<issue id="[A-Za-z0-9]+" severity="Error" message="[^"]*"' | cut -c1-220 | sed 's/^/LINT fatal: /' | head -10 >> "$F" || true
+            echo "lint report: $X ($(wc -c < "$X" 2>/dev/null) bytes)" >> "$F"
+            echo "LINT issues: $(grep -c '<issue ' "$X" 2>/dev/null) tags, $(grep -c 'severity=\"Fatal\"' "$X" 2>/dev/null) fatal, $(grep -c 'severity=\"Error\"' "$X" 2>/dev/null) error" >> "$F"
+            tr '\n' ' ' < "$X" 2>/dev/null | grep -oE '<issue [^>]*' | head -5 | cut -c1-280 | sed 's/^/LINT tag: /' >> "$F" || true
           else
             echo "lint: no xml report found under app/build" >> "$F"
           fi
@@ -167,7 +182,7 @@ jobs:
         if: failure()
         run: |
           F=/tmp/gradle-report-lines.txt
-          grep -E "^(ERR:|LINT|lint)" "$F" 2>/dev/null | head -20 | \
+          grep -E "^(ERR:|LINT|lint)" "$F" 2>/dev/null | head -25 | \
             while IFS= read -r line; do
               line=$(printf '%s' "$line" | tr -d '\000-\037\177')
               if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi

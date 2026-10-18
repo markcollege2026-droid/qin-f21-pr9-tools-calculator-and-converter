@@ -50,6 +50,18 @@ the hardware keys.
 
 * The manifest does **not** declare `android.permission.INTERNET` – the process cannot
   open a socket at all.
+* `usesCleartextTraffic="false"` plus a strict `network_security_config` keep that true
+  even if a network permission is ever added later.
+* `installLocation="internalOnly"` blocks installation on shared external storage, where
+  the APK (and with it the bundled data) would be world-readable.
+* The `android.app.lib_name` meta-data asserts the package contains no native
+  libraries; a tampered APK with injected `.so` files fails installation.
+* `allowBackup="false"` and explicitly non-exported components: nothing in the app is
+  reachable from other apps or pulled into a device backup.
+* All data (history, settings, photos, recordings) stays in the app-private
+  `filesDir` / `getExternalFilesDir()`; sharing is done with per-URI read grants
+  through a file provider that only serves the app-private directory
+  (canonical-path check against traversal, read-only).
 * No ads, no analytics, no crash reporting, no cloud, no account.
 * Exchange rates, infrared codes and all reference data are **bundled inside the APK**
   (`app/src/main/assets/data/`).

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The toolbox is fully offline: no INTERNET permission is declared, so the
+    platform blocks all network access. This config is the explicit, durable
+    policy statement on top of that - if a network permission is ever added,
+    cleartext traffic stays blocked until an exception is declared here.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
