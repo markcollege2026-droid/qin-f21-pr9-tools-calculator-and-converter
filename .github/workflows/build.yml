@@ -114,8 +114,11 @@ jobs:
           # :app:printSources is a diagnostic that dumps the resolved source roots of
           # every compiler (and whether they exist) so failures are provable, not
           # guessable.
+          # :app:lintRelease runs BEFORE the assembles: the automatic lintVitalRelease
+          # gate that assembleRelease depends on fails silently (no report, no issue
+          # list), while the plain lint task prints the issues and writes the XML.
           ./gradlew --no-daemon \
-            :app:printSources :app:assembleDebug :app:assembleRelease \
+            :app:printSources :app:lintRelease :app:assembleDebug :app:assembleRelease \
             -Pkotlin.compiler.execution.strategy=in-process \
             --stacktrace 2>&1 | tee gradle-build.log | awk '
             /^GRADLE_ERROR / { print; next }  # already tagged (diagnostic task, earlier steps)
@@ -150,7 +153,7 @@ jobs:
           if [ -n "$X" ]; then
             echo "lint report: $X" >> "$F"
             grep -oE '<issue id="[A-Za-z0-9]+" severity="[A-Za-z]+"' "$X" | sort | uniq -c | sort -rn | head -8 | sed 's/^/LINT count: /' >> "$F" || true
-            head -20 "$X" | grep -vE "^<|^[[:space:]]*$" | head -10 | cut -c1-200 | sed 's/^/LINT: /' >> "$F" || true
+            grep -A4 'severity="Error"' "$X" | grep -E '<issue id|<location' | cut -c1-220 | sed 's/^/LINT err: /' | head -16 >> "$F" || true
           else
             echo "lint: no xml report found under app/build" >> "$F"
           fi
