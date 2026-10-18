@@ -275,10 +275,12 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
                 listOf(FormScreen.FormField("number", "Number", "1994")),
                 { values ->
                     val number = (values["number"] ?: 0.0).toInt()
+                    // toString(): the resource uses %s slots, and lint rejects
+                    // numeric arguments for them (StringFormatMatches)
                     host.activity.getString(
                         R.string.qc_roman_result,
                         NumberCalculator.toRoman(number),
-                        NumberCalculator.fromRoman(NumberCalculator.toRoman(number))
+                        NumberCalculator.fromRoman(NumberCalculator.toRoman(number)).toString()
                     )
                 }
             )
@@ -430,12 +432,14 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
                         (values["day"] ?: 1.0).toInt().coerceIn(1, 28)
                     )
                     val difference = DateCalculator.age(birth, LocalDate.now())
+                    // toString(): the resource uses %s slots, and lint rejects
+                    // numeric arguments for them (StringFormatMatches)
                     host.activity.getString(
                         R.string.qc_age_result,
-                        difference.years,
-                        difference.months,
-                        difference.days,
-                        difference.totalDays
+                        difference.years.toString(),
+                        difference.months.toString(),
+                        difference.days.toString(),
+                        difference.totalDays.toString()
                     )
                 }
             )
