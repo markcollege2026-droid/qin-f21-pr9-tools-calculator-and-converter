@@ -81,13 +81,14 @@ tasks.register("printSources") {
             }
             fun srcDirsOf(name: String, set: Any?) {
                 if (set == null) { diag("$name: (not present)"); return }
-                val v = runCatching { set.javaClass.getMethod("getSrcDirs").invoke(set) }.getOrNull()
+                val s = set
+                val v = runCatching { s.javaClass.getMethod("getSrcDirs").invoke(s) }.getOrNull()
                 if (v is Iterable<*>) {
                     var count = 0
                     v.forEach { d -> count++; diag("$name: $d (exists=${existsOf(d)})") }
                     if (count == 0) diag("$name: (no registered dirs)")
                 } else {
-                    diag("$name: (getSrcDirs unavailable; type=${set.javaClass.name})")
+                    diag("$name: (getSrcDirs unavailable; type=${s.javaClass.name})")
                 }
             }
             val androidMain = project.extensions
