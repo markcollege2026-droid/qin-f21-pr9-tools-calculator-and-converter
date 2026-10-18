@@ -40,7 +40,13 @@ android {
         getByName("main") {
             // The ZXing core is vendored in the repository so that the app can be built
             // and audited without downloading anything.
+            //
+            // The directory is registered for BOTH source kinds: javac compiles the
+            // .java files from the `java` roots, while the Kotlin compiler only sees
+            // `kotlin` roots in Android modules - without the second line every
+            // `com.google.zxing.*` import in the Kotlin code is unresolved.
             java.srcDir("../../third_party/zxing-core")
+            kotlin.srcDir("../../third_party/zxing-core")
         }
     }
 
