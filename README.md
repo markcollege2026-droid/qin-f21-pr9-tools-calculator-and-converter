@@ -88,11 +88,12 @@ of the running app.
 
 ## Building
 
-Two build paths are supported, both produce the same app. The offline pipeline is what
-runs in CI (`.github/workflows/build.yml`): self test + signed APK on every push and
-pull request.
+Two build paths are supported, both produce the same app, and both run in CI
+(`.github/workflows/build.yml`) on every push and pull request: the offline pipeline
+(self test + signed APK, no SDK needed) and the standard Gradle build (with the Android
+SDK).
 
-### 1. Offline pipeline (no Android SDK needed, used by CI)
+### 1. Offline pipeline (no Android SDK needed)
 
 ```bash
 tools/fetch-toolchain.sh     # one time: JDK 11, kotlinc, aapt2, d8, apksigner

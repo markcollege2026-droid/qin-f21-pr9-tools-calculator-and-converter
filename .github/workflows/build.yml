@@ -1,10 +1,17 @@
 # Continuous integration for the Qin F21 Toolbox.
 #
-# Runs the offline pipeline end to end (no Android SDK needed):
-#   1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner, android.jar)
-#   2. self test the pure Kotlin modules (183 checks)
-#   3. compile, dex, package and sign the APK
-#   4. verify the signature and upload the APK as an artefact
+# Both supported build paths run on every push and pull request:
+#
+#   offline-build:
+#     1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner, android.jar)
+#     2. self test the pure Kotlin modules (183 checks)
+#     3. compile, dex, package and sign the APK without an Android SDK
+#     4. verify the signature and upload the APK as an artefact
+#
+#   gradle-build:
+#     1. set up JDK 17 and the Android SDK (platform 30)
+#     2. build the app with Gradle (AGP 7.4.2, Kotlin 1.8.22)
+#     3. upload the debug and release APKs as artefacts
 name: Build
 
 on:
@@ -14,8 +21,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  selftest-and-build:
-    name: Self test + offline APK build
+  offline-build:
+    name: Offline pipeline (self test + APK)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,4 +57,41 @@ jobs:
         with:
           name: qin-f21-toolbox-1.0.0.apk
           path: build/outputs/qin-f21-toolbox-1.0.0.apk
+          if-no-files-found: error
+
+  gradle-build:
+    name: Gradle build (Android SDK 30)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK (platform 30, build-tools 33.0.1)
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-30 build-tools;33.0.1'
+
+      - name: Point Gradle at the SDK
+        run: |
+          if [ -z "${ANDROID_HOME:-}" ]; then
+            echo "sdk.dir=$HOME/.android/sdk" > local.properties
+          fi
+
+      - name: Set up Gradle (wrapper + dependency cache)
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build debug and release APKs
+        run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v7
+        with:
+          name: qin-f21-toolbox-gradle-apks
+          path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error

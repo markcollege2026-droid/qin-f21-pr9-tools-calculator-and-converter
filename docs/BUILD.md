@@ -1,9 +1,9 @@
 # Building the toolbox
 
-The project can be built in two ways. Both produce the same application; the offline
-pipeline exists because the build environment used for this work had no Android SDK and
-no access to `maven.google.com`. The offline pipeline is the one executed in CI
-(see "Continuous integration" below) and is the verified path.
+The project can be built in two ways. Both produce the same application and both are
+verified in CI (see "Continuous integration" below). The offline pipeline exists because
+the build environment used for this work had no Android SDK and no access to
+`maven.google.com`.
 
 ---
 
@@ -66,16 +66,22 @@ reproducible.
 
 ### Continuous integration
 
-`.github/workflows/build.yml` runs on every push to `main` and on every pull request:
+`.github/workflows/build.yml` runs on every push to `main` and on every pull request,
+with two jobs:
 
-1. `tools/fetch-toolchain.sh` – pinned, verified tool-chain (cached with
-   `actions/cache` keyed on the fetch script);
-2. `tools/selftest.sh` – the 183 pure-Kotlin checks;
-3. `tools/build-offline.sh` – the signed APK;
-4. `apksigner verify` on the artefact, then the APK is uploaded as a build artefact.
+* **Offline pipeline** –
+  1. `tools/fetch-toolchain.sh`: pinned, verified tool-chain (cached with
+     `actions/cache` keyed on the fetch script);
+  2. `tools/selftest.sh`: the 183 pure-Kotlin checks;
+  3. `tools/build-offline.sh`: the signed APK;
+  4. `apksigner verify` on the artefact, then the APK is uploaded as a build artefact.
 
-CI therefore only ever exercises the offline pipeline; the Gradle build (below) is not
-run in CI.
+* **Gradle build** –
+  1. JDK 17 (Temurin) and the Android SDK (platform 30 + build-tools 33.0.1) via
+     `setup-java` / `setup-android`;
+  2. `./gradlew :app:assembleDebug :app:assembleRelease` (the wrapper and the Gradle
+     dependency cache are maintained by `gradle/actions/setup-gradle`);
+  3. the debug and release APKs are uploaded as build artefacts.
 
 ### Debug key
 
@@ -93,18 +99,19 @@ own key before distributing the app.
 ./gradlew :app:installDebug       # install on a connected device
 ```
 
-* AGP 7.4.2, Kotlin 1.8.22, `compileSdk = 30`, `minSdk = 30`, `targetSdk = 30`.
+* AGP 7.4.2, Kotlin 1.8.22, Gradle 7.6.2 (wrapper committed in `gradle/wrapper`),
+  `compileSdk = 30`, `minSdk = 30`, `targetSdk = 30`, built on JDK 17.
 * `android.useAndroidX=false` – the app uses the plain platform framework, there is no
   AndroidX or Material dependency.
 * The ZXing core is added as a source directory (`third_party/zxing-core`), so Gradle
   needs no extra repository.
 * The release build enables R8 and resource shrinking; the rules in
   `app/proguard-rules.pro` keep the line numbers for readable stack traces.
+* `assembleRelease` produces an **unsigned** release APK (no release signing config is
+  configured on purpose); sign it with your own key before distributing.
 
-The Gradle build was **not executed** in this environment (no Gradle distribution and no
-access to `services.gradle.org` / `maven.google.com`), so it is provided for normal
-development environments and is unverified here. The verified path is the offline
-pipeline above.
+The Gradle build runs in CI (see above) with the Android SDK; it also works in any
+standard development environment with a local SDK (platform 30) and JDK 17.
 
 ---
 
