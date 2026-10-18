@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import android.os.Build
 import android.text.InputType
 import android.util.TypedValue
@@ -40,21 +41,6 @@ interface ScreenHost {
  * and the APK small. Each screen owns its own key handling so the physical D-pad and
  * keypad can be supported precisely.
  */
-/**
- * Makes a scroll container reachable with the physical D-pad.
- *
- * A [ScrollView] only responds to the arrow keys while it holds the focus, and its default
- * descendant focusability would let it take the focus before its own children. With
- * [ViewGroup.FOCUS_AFTER_DESCENDANTS] the children keep winning, so this only becomes a
- * focus stop on screens whose content has nothing focusable inside it - the read-only
- * screens such as Diagnostics and About, where the D-pad is otherwise unable to scroll.
- */
-fun ScrollView.forKeypad(): ScrollView {
-    isFocusable = true
-    descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
-    return this
-}
-
 abstract class Screen(val host: ScreenHost) {
 
     /** Title shown in the header. */
@@ -196,12 +182,47 @@ object Widgets {
         return typed.data
     }
 
-    fun roundedBackground(context: Context, fill: Int, stroke: Int = 0, radiusDp: Int = 10): GradientDrawable {
+    fun roundedBackground(
+        context: Context,
+        fill: Int,
+        stroke: Int = 0,
+        radiusDp: Int = 10,
+        strokeDp: Int = 1
+    ): GradientDrawable {
         val drawable = GradientDrawable()
         drawable.shape = GradientDrawable.RECTANGLE
         drawable.setColor(fill)
         drawable.cornerRadius = dp(context, radiusDp).toFloat()
-        if (stroke != 0) drawable.setStroke(dp(context, 1), stroke)
+        if (stroke != 0) drawable.setStroke(dp(context, strokeDp), stroke)
+        return drawable
+    }
+
+    /**
+     * Background for a control that can hold the D-pad focus.
+     *
+     * A static [GradientDrawable] looks identical whatever the state of its view, so a
+     * focusable row drawn with one gives a keypad user no feedback at all. This builds a
+     * state list instead: the pressed and focused states get the 2 dp primary ring, the
+     * resting state keeps the surface and the hairline outline.
+     */
+    fun focusBackground(
+        context: Context,
+        fill: Int,
+        stroke: Int,
+        radiusDp: Int = 10
+    ): StateListDrawable {
+        val focusFill = color(context, R.color.surface_high)
+        val ring = color(context, R.color.primary)
+        val drawable = StateListDrawable()
+        drawable.addState(
+            intArrayOf(android.R.attr.state_pressed),
+            roundedBackground(context, focusFill, ring, radiusDp, 2)
+        )
+        drawable.addState(
+            intArrayOf(android.R.attr.state_focused),
+            roundedBackground(context, focusFill, ring, radiusDp, 2)
+        )
+        drawable.addState(intArrayOf(), roundedBackground(context, fill, stroke, radiusDp))
         return drawable
     }
 
@@ -235,4 +256,19 @@ object HardwareKeys {
     const val KEY_ENDCALL = KeyEvent.KEYCODE_ENDCALL
     const val KEY_SOFT_LEFT = KeyEvent.KEYCODE_SOFT_LEFT
     const val KEY_SOFT_RIGHT = KeyEvent.KEYCODE_SOFT_RIGHT
+}
+
+/**
+ * Makes a scroll container reachable with the physical D-pad.
+ *
+ * A [ScrollView] only responds to the arrow keys while it holds the focus, and its default
+ * descendant focusability would let it take the focus before its own children. With
+ * [ViewGroup.FOCUS_AFTER_DESCENDANTS] the children keep winning, so this only becomes a
+ * focus stop on screens whose content has nothing focusable inside it - the read-only
+ * screens such as Diagnostics and About, where the D-pad is otherwise unable to scroll.
+ */
+fun ScrollView.forKeypad(): ScrollView {
+    isFocusable = true
+    descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+    return this
 }

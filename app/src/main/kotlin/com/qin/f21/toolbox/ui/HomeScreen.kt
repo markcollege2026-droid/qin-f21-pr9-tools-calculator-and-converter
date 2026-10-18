@@ -172,7 +172,7 @@ class HomeScreen(host: ScreenHost) : Screen(host) {
         val tile = LinearLayout(host.activity)
         tile.orientation = LinearLayout.VERTICAL
         tile.gravity = Gravity.CENTER
-        tile.background = Widgets.roundedBackground(
+        tile.background = Widgets.focusBackground(
             host.activity,
             Widgets.color(host.activity, R.color.surface_alt),
             Widgets.color(host.activity, R.color.outline)
@@ -210,7 +210,7 @@ class HomeScreen(host: ScreenHost) : Screen(host) {
             Widgets.dp(host.activity, 10),
             Widgets.dp(host.activity, 8)
         )
-        row.background = Widgets.roundedBackground(
+        row.background = Widgets.focusBackground(
             host.activity,
             Widgets.color(host.activity, R.color.surface),
             Widgets.color(host.activity, R.color.outline)

@@ -345,7 +345,7 @@ def main():
     text_secondary = colors.get("text_secondary", (154, 168, 184))
     text_muted = colors.get("text_muted", (107, 122, 140))
 
-    width, height = 1000, 1400
+    width, height = 1000, 1700
     image = Image.new("RGB", (width * SCALE, height * SCALE), bg)
     draw = ImageDraw.Draw(image)
 
@@ -442,34 +442,91 @@ def main():
     # ---- components ---------------------------------------------------------
     draw.text((s(40), y), "COMPONENTS", font=section_font, fill=primary)
     y += s(24)
-    # a list row
-    row_y = y
-    draw.rounded_rectangle([s(40), row_y, s(460), row_y + s(52)], radius=s(10), fill=surface, outline=outline, width=s(1))
-    viewport, strokes, fills = load_vector(os.path.join(DESIGN, "drawable/ic_convert.xml"))
-    render_icon(draw, [p for p, w in strokes], (s(56), row_y + s(14)), s(24), viewport, primary, 1.7)
-    draw.text((s(90), row_y + s(10)), "Unit converter", font=font(13 * SCALE), fill=text_primary)
-    draw.text((s(90), row_y + s(30)), "Length, mass, area, volume and 14 more", font=small_font, fill=text_secondary)
-    # a primary button
-    draw.rounded_rectangle([s(490), row_y + s(8), s(620), row_y + s(44)], radius=s(8), fill=primary)
-    draw.text((s(508), row_y + s(18)), "Calculate", font=font(13 * SCALE, bold=True), fill=colors["on_primary"])
-    # a secondary button
-    draw.rounded_rectangle([s(636), row_y + s(8), s(766), row_y + s(44)], radius=s(8), fill=surface_alt, outline=outline, width=s(1))
-    draw.text((s(652), row_y + s(18)), "Reset", font=font(13 * SCALE), fill=text_primary)
-    # a result card
-    draw.rounded_rectangle([s(40), row_y + s(64), s(460), row_y + s(124)], radius=s(10),
-                           fill=colors["primary_dim"], outline=primary, width=s(1))
-    draw.text((s(56), row_y + s(74)), "0.621371 mi", font=font(20 * SCALE, bold=True), fill=primary)
-    draw.text((s(56), row_y + s(102)), "result card - primary_dim background, primary border",
-              font=small_font, fill=text_secondary)
-    # an unavailable card
-    draw.rounded_rectangle([s(490), row_y + s(64), s(910), row_y + s(124)], radius=s(10),
-                           fill=surface_alt, outline=colors["outline_strong"], width=s(1))
-    draw.text((s(506), row_y + s(74)), "No infrared emitter", font=font(13 * SCALE, bold=True), fill=text_primary)
-    draw.text((s(506), row_y + s(96)), "this device does not report an emitter, the code list stays readable",
-              font=small_font, fill=text_secondary)
-    y = row_y + s(140)
 
-    draw.text((s(40), y), "spacing scale  4 / 8 / 12 / 16 / 24 dp     touch target 44 dp     keypad key 42 dp",
+    def row_card(x0, y0, title, subtitle, focused):
+        fill = surface_alt if focused else surface
+        draw.rounded_rectangle(
+            [x0, y0, x0 + s(430), y0 + s(50)], radius=s(10), fill=fill,
+            outline=primary if focused else outline, width=s(3 if focused else 1))
+        viewport, strokes, fills = load_vector(os.path.join(DESIGN, "drawable/ic_convert.xml"))
+        render_icon(draw, [p for p, w in strokes], (x0 + s(12), y0 + s(13)), s(24), viewport,
+                    primary, 1.7)
+        draw.text((x0 + s(48), y0 + s(9)), title, font=font(13 * SCALE), fill=text_primary)
+        draw.text((x0 + s(48), y0 + s(28)), subtitle, font=small_font,
+                  fill=text_secondary if not focused else text_primary)
+        if focused:
+            draw.text((x0 + s(340), y0 + s(31)), "focused", font=small_font, fill=primary)
+
+    row_card(s(40), y, "Unit converter", "Length - kilometre to mile", False)
+    row_card(s(490), y, "Unit converter", "Length - kilometre to mile", True)
+    draw.text((s(40), y + s(54)), "resting row", font=small_font, fill=text_muted)
+    draw.text((s(490), y + s(54)), "D-pad focus: surface_high + 2 dp primary ring", font=small_font, fill=text_muted)
+    y += s(78)
+
+    # buttons
+    draw.rounded_rectangle([s(40), y, s(170), y + s(38)], radius=s(8), fill=primary)
+    draw.text((s(58), y + s(10)), "Calculate", font=font(13 * SCALE, bold=True), fill=colors["on_primary"])
+    draw.rounded_rectangle([s(186), y, s(316), y + s(38)], radius=s(8), fill=surface_alt,
+                           outline=outline, width=s(1))
+    draw.text((s(202), y + s(10)), "Reset", font=font(13 * SCALE), fill=text_primary)
+    # focused secondary button
+    draw.rounded_rectangle([s(332), y, s(462), y + s(38)], radius=s(8), fill=surface_alt,
+                           outline=primary, width=s(3))
+    draw.text((s(348), y + s(10)), "Swap", font=font(13 * SCALE), fill=text_primary)
+    draw.text((s(490), y + s(12)), "primary / secondary / focused secondary", font=small_font, fill=text_muted)
+    y += s(54)
+
+    # result and unavailable cards
+    draw.rounded_rectangle([s(40), y, s(460), y + s(56)], radius=s(10),
+                           fill=colors["primary_dim"], outline=primary, width=s(1))
+    draw.text((s(56), y + s(10)), "0.621371 mi", font=font(20 * SCALE, bold=True), fill=primary)
+    draw.text((s(56), y + s(38)), "result card", font=small_font, fill=text_secondary)
+    draw.rounded_rectangle([s(490), y, s(910), y + s(56)], radius=s(10),
+                           fill=surface_alt, outline=colors["outline_strong"], width=s(1))
+    draw.text((s(506), y + s(10)), "No infrared emitter", font=font(13 * SCALE, bold=True), fill=text_primary)
+    draw.text((s(506), y + s(32)), "runtime detection failed - the code list stays readable",
+              font=small_font, fill=text_secondary)
+    y += s(72)
+
+    # keypad - the exact grids the app builds, 4 columns, keys measured by the view
+    draw.text((s(40), y), "KEYPAD - converter (120 dp tall, 4 x 4)", font=section_font, fill=primary)
+    draw.text((s(560), y), "calculator (4 x 5)", font=section_font, fill=primary)
+    y += s(20)
+    converter_keys = [["7", "8", "9", "\u232b"], ["4", "5", "6", "C"],
+                      ["1", "2", "3", "\u2212"], ["0", "00", ".", "\u00b1"]]
+    calculator_keys = [["7", "8", "9", "\u00f7"], ["4", "5", "6", "\u00d7"],
+                       ["1", "2", "3", "\u2212"], ["0", ".", "=", "+"],
+                       ["(", ")", "%", "\u232b"]]
+
+    def keypad(x0, y0, grid, focused_key, key_w, key_h, gap):
+        for row_i, row in enumerate(grid):
+            for column, label in enumerate(row):
+                kx = x0 + column * (key_w + gap)
+                ky = y0 + row_i * (key_h + gap)
+                focused = label == focused_key
+                draw.rounded_rectangle(
+                    [kx, ky, kx + key_w, ky + key_h], radius=s(6),
+                    fill=surface_alt if focused else surface,
+                    outline=primary if focused else outline,
+                    width=s(2 if focused else 1))
+                glyph_font = font(14 * SCALE, mono=True)
+                text_width = draw.textlength(label, font=glyph_font)
+                draw.text((kx + (key_w - text_width) / 2, ky + s((key_h - s(18)) // 2) + s(2)),
+                          label, font=glyph_font, fill=text_primary)
+
+    keypad(s(40), y, converter_keys, "5", s(58), s(27), s(5))
+    keypad(s(560), y, calculator_keys, "=", s(58), s(22), s(4))
+
+    note_x = s(316)
+    draw.text((note_x, y + s(2)), "Keys are laid out by KeypadView, not by the", font=small_font, fill=text_secondary)
+    draw.text((note_x, y + s(18)), "platform: the container measures every", font=small_font, fill=text_secondary)
+    draw.text((note_x, y + s(34)), "cell and the D-pad moves with the grid.", font=small_font, fill=text_secondary)
+    draw.text((note_x, y + s(58)), "The key with the focus ring is the current", font=small_font, fill=text_muted)
+    draw.text((note_x, y + s(74)), "D-pad position; Enter presses it.", font=small_font, fill=text_muted)
+
+    y += 5 * (s(22) + s(4)) + s(28)
+
+    draw.text((s(40), y), "spacing 4 / 8 / 12 / 16 / 24 dp     touch target 44 dp     key 42 dp",
               font=small_font, fill=text_muted)
 
     image = image.resize((int(width), int(height)), Image.LANCZOS)

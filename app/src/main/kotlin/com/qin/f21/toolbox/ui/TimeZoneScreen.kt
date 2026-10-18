@@ -204,7 +204,7 @@ class TimeZoneScreen(host: ScreenHost) : Screen(host) {
                 Widgets.dp(context(), 10), Widgets.dp(context(), 6),
                 Widgets.dp(context(), 10), Widgets.dp(context(), 6)
             )
-            row.background = Widgets.roundedBackground(
+            row.background = Widgets.focusBackground(
                 context(), Widgets.color(context(), R.color.surface), Widgets.color(context(), R.color.outline)
             )
             val nameView = Widgets.text(context(), name.replace('_', ' '), R.style.Text_Label)

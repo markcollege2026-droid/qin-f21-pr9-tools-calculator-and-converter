@@ -449,7 +449,7 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
             Widgets.dp(context, 10), Widgets.dp(context, 8),
             Widgets.dp(context, 10), Widgets.dp(context, 8)
         )
-        row.background = Widgets.roundedBackground(
+        row.background = Widgets.focusBackground(
             context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
         )
         row.isFocusable = true
