@@ -41,7 +41,7 @@ android {
             // The ZXing core is vendored in the repository so that the app can be built
             // and audited without downloading anything. javac compiles the .java files
             // from these roots.
-            java.srcDir("../../third_party/zxing-core")
+            java.srcDir("../third_party/zxing-core")
         }
     }
 
@@ -58,7 +58,7 @@ android {
 kotlin {
     sourceSets {
         getByName("main") {
-            kotlin.srcDir("../../third_party/zxing-core")
+            kotlin.srcDir("../third_party/zxing-core")
         }
     }
 }
