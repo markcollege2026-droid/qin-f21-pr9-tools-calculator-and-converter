@@ -53,6 +53,9 @@ class AboutScreen(host: ScreenHost) : Screen(host) {
         )
         version.gravity = Gravity.CENTER
         column.addView(version)
+        val minOs = Widgets.caption(context, context.getString(R.string.about_min_os))
+        minOs.gravity = Gravity.CENTER
+        column.addView(minOs)
         val tagline = Widgets.caption(context, context.getString(R.string.about_tagline))
         tagline.gravity = Gravity.CENTER
         column.addView(tagline)

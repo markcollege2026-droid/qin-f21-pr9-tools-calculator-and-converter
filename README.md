@@ -6,6 +6,9 @@ An **offline utility toolbox** for the Qin F21 Pro (Xiaomi Qin F21 Pro, 2.8" 480
 Android 11 / API 30). The app contains 21 tools in five categories, uses no third party
 runtime dependency, has **no `INTERNET` permission** and never contacts a server.
 
+**Requires Android 11 (API 30) or newer** – that is also the operating system of the
+target device, so nothing below Android 11 is supported or tested.
+
 ```
 Convert   Unit converter · Currency · Time zones · Date & time
 Calculate Calculator · Quick calculators · Geometry
