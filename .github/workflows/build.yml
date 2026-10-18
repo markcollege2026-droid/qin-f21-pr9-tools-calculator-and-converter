@@ -152,8 +152,10 @@ jobs:
           X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1 || true)
           if [ -n "$X" ]; then
             echo "lint report: $X" >> "$F"
-            grep -oE '<issue id="[A-Za-z0-9]+" severity="[A-Za-z]+"' "$X" | sort | uniq -c | sort -rn | head -8 | sed 's/^/LINT count: /' >> "$F" || true
-            grep -A4 'severity="Error"' "$X" | grep -E '<issue id|<location' | cut -c1-220 | sed 's/^/LINT err: /' | head -16 >> "$F" || true
+            # lint XML tags span multiple lines, so flatten before grepping
+            FLAT=$(tr '\n' ' ' < "$X" 2>/dev/null) || true
+            printf '%s' "$FLAT" | grep -oE '<issue id="[A-Za-z0-9]+" severity="[A-Za-z]+"' | sort | uniq -c | sort -rn | head -8 | sed 's/^/LINT count: /' >> "$F" || true
+            printf '%s' "$FLAT" | grep -oE '<issue id="[A-Za-z0-9]+" severity="Error" message="[^"]*"' | cut -c1-220 | sed 's/^/LINT fatal: /' | head -10 >> "$F" || true
           else
             echo "lint: no xml report found under app/build" >> "$F"
           fi

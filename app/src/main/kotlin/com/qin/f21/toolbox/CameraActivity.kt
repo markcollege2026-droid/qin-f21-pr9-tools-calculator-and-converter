@@ -1,6 +1,7 @@
 package com.qin.f21.toolbox
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -175,6 +176,11 @@ class CameraActivity : Activity() {
         override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
     }
 
+    // Lint cannot see through the hasCameraPermission() guard below, so the
+    // MissingPermission finding on the Camera2 calls is suppressed at this
+    // method level: the CAMERA permission is requested in onCreate() and every
+    // entry point returns before touching the camera without it.
+    @SuppressLint("MissingPermission")
     private fun openCamera() {
         if (!hasCameraPermission()) return
         val manager = getSystemService(Context.CAMERA_SERVICE) as? CameraManager ?: return
