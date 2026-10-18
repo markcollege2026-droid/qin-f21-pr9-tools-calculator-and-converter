@@ -66,30 +66,46 @@ kotlin {
 // CI diagnostic: prints exactly which source directories (and whether they exist)
 // are registered on each compiler, plus how many of the resolved compileDebugKotlin
 // sources come from the vendored ZXing tree. Output is prefixed so the CI problem
-// matcher can surface it as check-run annotations.
+// matcher can surface it as check-run annotations. All access is reflective so the
+// snippet does not depend on the exact AGP/KGP/Gradle API shape of the accessors.
 tasks.register("printSources") {
     doLast {
         try {
             val diag = { msg: String -> println("GRADLE_ERROR DIAG $msg") }
-            project.extensions.findByType(com.android.build.gradle.AppExtension::class.java)
-                ?.sourceSets?.getByName("main")?.let { ss ->
-                    ss.java.srcDirs.forEach { d -> diag("android main.java: ${d.absolutePath} (exists=${d.exists()})") }
-                    ss.kotlin.srcDirs.forEach { d -> diag("android main.kotlin: ${d.absolutePath} (exists=${d.exists()})") }
+            fun existsOf(d: Any): Boolean = try {
+                d.javaClass.getMethod("exists").invoke(d) as? Boolean ?: false
+            } catch (e: Exception) {
+                try {
+                    (d.javaClass.getMethod("getAsFile").invoke(d) as? java.io.File)?.exists() ?: false
+                } catch (e2: Exception) { false }
+            }
+            fun srcDirsOf(name: String, set: Any?) {
+                if (set == null) { diag("$name: (not present)"); return }
+                val v = runCatching { set.javaClass.getMethod("getSrcDirs").invoke(set) }.getOrNull()
+                if (v is Iterable<*>) {
+                    var count = 0
+                    v.forEach { d -> count++; diag("$name: $d (exists=${existsOf(d)})") }
+                    if (count == 0) diag("$name: (no registered dirs)")
+                } else {
+                    diag("$name: (getSrcDirs unavailable; type=${set.javaClass.name})")
                 }
-            project.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension::class.java)
-                ?.sourceSets?.getByName("main")?.let { ss ->
-                    ss.kotlin.srcDirs.forEach { d -> diag("kotlin main.kotlin: ${d.absolutePath} (exists=${d.exists()})") }
-                }
+            }
+            val androidMain = project.extensions
+                .findByType(com.android.build.gradle.AppExtension::class.java)
+                ?.sourceSets?.getByName("main")
+            srcDirsOf("android main.java", androidMain?.java)
+            srcDirsOf("android main.kotlin", androidMain?.kotlin)
+            val kotlinMain = project.extensions
+                .findByType(org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension::class.java)
+                ?.sourceSets?.getByName("main")
+            srcDirsOf("kotlin main.kotlin", kotlinMain?.kotlin)
             val compileKt = project.tasks.getByName("compileDebugKotlin")
-            val files: Set<java.io.File> = when (compileKt) {
-                is org.gradle.api.tasks.SourceTask -> compileKt.sources.files
-                else -> {
-                    val getter = compileKt.javaClass.methods.firstOrNull { it.name == "getSources" && it.parameterCount == 0 }
-                    when (val v = getter?.invoke(compileKt)) {
-                        is org.gradle.api.file.FileCollection -> v.files
-                        else -> { diag("compileDebugKotlin is ${compileKt.javaClass.name} (no usable sources property)"); emptySet() }
-                    }
-                }
+            val getter = compileKt.javaClass.methods
+                .firstOrNull { it.name == "getSources" && it.parameterCount == 0 }
+            val files: Set<java.io.File> = when (val v = getter?.invoke(compileKt)) {
+                is org.gradle.api.file.FileCollection -> v.files
+                is Iterable<*> -> v.mapNotNull { it as? java.io.File }.toSet()
+                else -> { diag("compileDebugKotlin (${compileKt.javaClass.name}): no readable sources property"); emptySet() }
             }
             val zx = files.filter { it.path.contains("zxing") }
             diag("compileDebugKotlin sources: ${files.size} files total, ${zx.size} from vendored zxing")

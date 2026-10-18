@@ -145,6 +145,17 @@ jobs:
           done
           true
 
+      # The full log is the ground truth; annotations are a best-effort summary.
+      - name: Upload failure log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-build-failure-log
+          path: |
+            gradle-build.log
+            hs_err_pid*.log
+          if-no-files-found: ignore
+
       - name: Upload APKs
         uses: actions/upload-artifact@v7
         with:
