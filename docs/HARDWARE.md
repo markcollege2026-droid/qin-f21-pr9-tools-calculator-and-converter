@@ -85,9 +85,9 @@ has been laid out, unless something already holds it, so the arrow keys always h
 starting point. Scroll containers are focusable with
 `descendantFocusability = afterDescendants`: their children win the focus, and the
 container only becomes a stop on read-only screens such as Diagnostics and About, where
-it then scrolls with the arrow keys. The header back arrow is deliberately *not* a focus
-stop, so Enter on a freshly opened tool never navigates away; the physical Back key
-handles that.
+it then scrolls with the arrow keys. The header sits outside the content area, so the
+first focus always lands on a control of the tool itself and Enter on a freshly opened
+screen can never hit the back arrow.
 
 ## Limits that are not hardware dependent
 
