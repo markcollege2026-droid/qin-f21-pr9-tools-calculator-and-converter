@@ -122,10 +122,10 @@ still unverified.
 | Item | Size |
 |------|------|
 | Signed APK | **1.11 MiB** (1,161,286 bytes) |
-| `classes.dex` | 3.05 MB (1.02 MB compressed inside the APK) |
+| `classes.dex` | 3.04 MB (1.02 MB compressed inside the APK) |
 | Compiled resources | 34.5 KB |
 | Bundled assets (rates, IR codes) | 1.1 KB |
-| Uncompressed payload | 3.17 MB |
+| Uncompressed payload | 3.18 MB |
 
 The installed size is therefore around 4–5 MB (APK + extracted dex/resources), well
 below the 35 MB target. The number above is measured from the signed artefact with
