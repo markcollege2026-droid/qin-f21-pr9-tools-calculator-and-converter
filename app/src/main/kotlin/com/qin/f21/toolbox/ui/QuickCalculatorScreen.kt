@@ -253,10 +253,12 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
                     val a = (values["a"] ?: 0.0).toLong()
                     val b = (values["b"] ?: 0.0).toLong()
                     val factors = NumberCalculator.factorize(a)
+                    // toString(): the resource uses %s slots, and lint rejects
+                    // raw Long arguments for them (StringFormatMatches)
                     host.activity.getString(
                         R.string.qc_number_result,
-                        NumberCalculator.gcd(a, b),
-                        NumberCalculator.lcm(a, b),
+                        NumberCalculator.gcd(a, b).toString(),
+                        NumberCalculator.lcm(a, b).toString(),
                         if (factors.isEmpty()) "-" else factors.joinToString(" × ") { (it.first.toString() + if (it.second > 1) "^" + it.second else "") },
                         if (NumberCalculator.isPrime(a)) host.activity.getString(R.string.yes) else host.activity.getString(R.string.no)
                     )
