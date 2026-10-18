@@ -133,30 +133,33 @@ jobs:
       - name: Report build failure as annotations
         if: failure()
         run: |
+          # This step runs under 'bash -eo pipefail'; a grep that matches nothing
+          # exits 1 and would abort the rest of the report, so every pipeline is
+          # terminated with '|| true'.
           L=gradle-build.log
           echo "GRADLE_ERROR log: $(wc -c < $L 2>/dev/null || echo missing) bytes, $(wc -l < $L 2>/dev/null || echo 0) lines"
-          dmesg 2>/dev/null | grep -iE "oom|killed process" | tail -3 | sed 's/^/GRADLE_ERROR dmesg: /'
+          dmesg 2>/dev/null | grep -iE "oom|killed process" | tail -3 | sed 's/^/GRADLE_ERROR dmesg: /' || true
           echo "GRADLE_ERROR === What-went-wrong block ==="
-          awk '/What went wrong/{f=1} f{print} /\\* Try:/{if(f)exit}' "$L" 2>/dev/null | head -25 | sed 's/^/GRADLE_ERROR /'
+          awk '/What went wrong/{f=1} f{print} /\\* Try:/{if(f)exit}' "$L" 2>/dev/null | head -25 | sed 's/^/GRADLE_ERROR /' || true
           echo "GRADLE_ERROR === first exception ==="
-          grep -nE "Exception is:|Caused by:|^org\.|^java\.|OutOfMemoryError|OutOfMemory" "$L" 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /'
+          grep -nE "Exception is:|Caused by:|^org\.|^java\.|OutOfMemoryError|OutOfMemory" "$L" 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /' || true
           echo "GRADLE_ERROR === kotlin/javac error lines (e:/error:/Unresolved) ==="
-          grep -nE "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /'
+          grep -nE "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /' || true
           # AGP 7.4 prints only "Lint found fatal errors" to the console; the issues
           # themselves live in the XML report - summarize it here.
-          X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1)
+          X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1 || true)
           if [ -n "$X" ]; then
             echo "GRADLE_ERROR === lint report: $X ==="
-            grep -oE '<issue id="[A-Za-z0-9]+" severity="[A-Za-z]+"' "$X" | sort | uniq -c | sort -rn | head -8 | sed 's/^/GRADLE_ERROR /'
+            grep -oE '<issue id="[A-Za-z0-9]+" severity="[A-Za-z]+"' "$X" | sort | uniq -c | sort -rn | head -8 | sed 's/^/GRADLE_ERROR /' || true
             echo "GRADLE_ERROR === first lint issues (raw head) ==="
-            head -20 "$X" | sed 's/^/GRADLE_ERROR /'
+            head -20 "$X" | sed 's/^/GRADLE_ERROR /' || true
           else
             echo "GRADLE_ERROR (no lint xml report found under app/build)"
           fi
           echo "GRADLE_ERROR === failed tasks ==="
-          grep -nE "^> Task .*FAILED" "$L" 2>/dev/null | head -10 | sed 's/^/GRADLE_ERROR /'
+          grep -nE "^> Task .*FAILED" "$L" 2>/dev/null | head -10 | sed 's/^/GRADLE_ERROR /' || true
           echo "GRADLE_ERROR === tail (last 30) ==="
-          tail -30 "$L" 2>/dev/null | sed 's/^/GRADLE_ERROR /'
+          tail -30 "$L" 2>/dev/null | sed 's/^/GRADLE_ERROR /' || true
           true
 
       # The full log is the ground truth; annotations are a best-effort summary.
