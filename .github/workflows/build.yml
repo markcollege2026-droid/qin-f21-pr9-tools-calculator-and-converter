@@ -103,22 +103,33 @@ jobs:
           EOF
           echo "::add-matcher::$GITHUB_WORKSPACE/matcher.json"
 
-      - name: Check Gradle configuration (./gradlew help)
-        run: |
-          set -o pipefail
-          ./gradlew help 2>&1 | tee gradle-config.log
-
       - name: Build debug and release APKs
         run: |
+          # --no-daemon: single JVM for the one-off CI build; the Kotlin compiler
+          # runs in-process so no extra daemon JVM competes for the runner's RAM.
           set -o pipefail
-          ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace 2>&1 | tee gradle-build.log
+          set +e
+          ./gradlew --no-daemon \
+            :app:assembleDebug :app:assembleRelease \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            --stacktrace 2>&1 | tee gradle-build.log
+          rc=${PIPESTATUS[0]}
+          exit $rc
 
       - name: Report build failure as annotations
         if: failure()
         run: |
-          { grep -E "FAILURE:|What went wrong|Execution failed|Caused by|^[ew]: |> Task .* FAILED|error:|Missing class|SDK location not found" gradle-config.log gradle-build.log 2>/dev/null; \
-            grep -E "^\s*> " gradle-build.log 2>/dev/null | head -20; } \
-            | sort -u | sed 's/^/GRADLE_ERROR /' | head -40 || true
+          echo "GRADLE_ERROR === tail of gradle-build.log ==="
+          tail -25 gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
+          for f in hs_err_pid*.log; do
+            [ -e "$f" ] || continue
+            echo "GRADLE_ERROR === JVM crash log: $f ==="
+            head -10 "$f" | sed 's/^/GRADLE_ERROR /'
+          done
+          echo "GRADLE_ERROR === targeted grep ==="
+          grep -E "FAILURE:|What went wrong|Execution failed for task|Caused by:|^[ew]: |error: |Missing class|SDK location not found|OutOfMemory|exited unexpectedly|daemon disappeared" \
+            gradle-build.log 2>/dev/null | sort -u | head -10 | sed 's/^/GRADLE_ERROR /'
+          true
 
       - name: Upload APKs
         uses: actions/upload-artifact@v7
