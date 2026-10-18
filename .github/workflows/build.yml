@@ -134,10 +134,12 @@ jobs:
         run: |
           echo "GRADLE_ERROR log: $(wc -c < gradle-build.log 2>/dev/null || echo missing) bytes, $(wc -l < gradle-build.log 2>/dev/null || echo 0) lines"
           dmesg 2>/dev/null | grep -iE "oom|killed process" | tail -3 | sed 's/^/GRADLE_ERROR dmesg: /'
-          echo "GRADLE_ERROR === head of gradle-build.log ==="
-          head -6 gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
-          echo "GRADLE_ERROR === tail of gradle-build.log ==="
-          tail -8 gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === FAILURE section (40 lines) ==="
+          sed -n '/FAILURE: Build failed/,+40p' gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === error-ish lines ==="
+          grep -nE "^> Task .*FAILED|error:|Unresolved|OutOfMemory|Could not (resolve|find)|AAPT|exited unexpectedly" gradle-build.log 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === zxing mentions ==="
+          grep -n "zxing" gradle-build.log 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /'
           for f in hs_err_pid*.log; do
             [ -e "$f" ] || continue
             echo "GRADLE_ERROR === JVM crash log: $f ==="
