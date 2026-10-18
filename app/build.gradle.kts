@@ -36,30 +36,8 @@ android {
         jvmTarget = "1.8"
     }
 
-    sourceSets {
-        getByName("main") {
-            // The ZXing core is vendored in the repository so that the app can be built
-            // and audited without downloading anything. javac compiles the .java files
-            // from these roots.
-            java.srcDir("../third_party/zxing-core")
-        }
-    }
-
     packagingOptions {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/DEPENDENCIES")
-    }
-}
-
-// The vendored ZXing is plain Java. javac compiles it (see android.sourceSets.main.java
-// above); the Kotlin compiler, however, only resolves symbols from its own `kotlin`
-// source roots, so the same directory must be registered here for CameraActivity.kt's
-// `com.google.zxing.*` imports to resolve. kotlinc parses the .java files for symbol
-// resolution but does not emit class files for them (javac does).
-kotlin {
-    sourceSets {
-        getByName("main") {
-            kotlin.srcDir("../third_party/zxing-core")
-        }
     }
 }
 
@@ -87,13 +65,10 @@ tasks.register("printSources") {
                 if (set == null) { diag("$name: (not present)"); return }
                 val s = set
                 val v = runCatching { s.javaClass.getMethod("getSrcDirs").invoke(s) }.getOrNull()
-                if (v is Iterable<*>) {
-                    var count = 0
-                    v.forEach { d -> count++; diag("$name: $d (exists=${existsOf(d)})") }
-                    if (count == 0) diag("$name: (no registered dirs)")
-                } else {
-                    diag("$name: (getSrcDirs unavailable; type=${s.javaClass.name})")
-                }
+                val dirs = if (v is Iterable<*>) v.toList() else listOf("<no getSrcDirs on ${s.javaClass.name}>")
+                // One line per set: the registered roots with existence, to keep the
+                // annotation budget free for actual build errors.
+                diag("$name: " + dirs.joinToString("; ") { d -> "$d (exists=${existsOf(d)})" })
             }
             val androidMain = project.extensions
                 .findByType(com.android.build.gradle.AppExtension::class.java)
@@ -107,14 +82,20 @@ tasks.register("printSources") {
             val compileKt = project.tasks.getByName("compileDebugKotlin")
             val getter = compileKt.javaClass.methods
                 .firstOrNull { it.name == "getSources" && it.parameterCount == 0 }
-            val files: Set<java.io.File> = when (val v = getter?.invoke(compileKt)) {
-                is org.gradle.api.file.FileCollection -> v.files
-                is Iterable<*> -> v.mapNotNull { it as? java.io.File }.toSet()
-                else -> { diag("compileDebugKotlin (${compileKt.javaClass.name}): no readable sources property"); emptySet() }
+            fun filesOf(task: Any, prop: String): Set<java.io.File> {
+                val g = task.javaClass.methods.firstOrNull { it.name == "get$prop" && it.parameterCount == 0 }
+                return when (val v = g?.invoke(task)) {
+                    is org.gradle.api.file.FileCollection -> v.files
+                    is Iterable<*> -> v.mapNotNull { it as? java.io.File }.toSet()
+                    else -> emptySet()
+                }
             }
-            val zx = files.filter { it.path.contains("zxing") }
-            diag("compileDebugKotlin sources: ${files.size} files total, ${zx.size} from vendored zxing")
-            zx.sortedBy { it.path }.take(5).forEach { diag("  zxing: ${it.path}") }
+            val srcFiles = filesOf(compileKt, "Sources")
+            val cpFiles = filesOf(compileKt, "Classpath")
+            val zxSrc = srcFiles.filter { it.path.contains("zxing") }
+            val zxCp = cpFiles.filter { it.path.contains("zxing") }
+            diag("compileDebugKotlin sources: ${srcFiles.size} files, ${zxSrc.size} zxing")
+            diag("compileDebugKotlin classpath: ${cpFiles.size} entries, ${zxCp.size} zxing -> " + zxCp.map { it.name }.distinct().joinToString(", "))
             diag("DIAG done")
         } catch (t: Throwable) {
             println("GRADLE_ERROR DIAG ERROR: ${t.javaClass.name}: ${t.message}")
@@ -124,6 +105,9 @@ tasks.register("printSources") {
 }
 
 dependencies {
+    // Vendored ZXing core, compiled from source by the :third_party:zxing Java
+    // library (see its build file). Comes in as a normal classpath dependency.
+    implementation(project(":third_party:zxing"))
     implementation(project(":core:common"))
     implementation(project(":core:conversion"))
     implementation(project(":core:calc"))

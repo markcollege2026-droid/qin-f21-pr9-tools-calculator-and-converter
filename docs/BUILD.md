@@ -103,8 +103,9 @@ own key before distributing the app.
   `compileSdk = 30`, `minSdk = 30`, `targetSdk = 30`, built on JDK 17.
 * `android.useAndroidX=false` – the app uses the plain platform framework, there is no
   AndroidX or Material dependency.
-* The ZXing core is added as a source directory (`third_party/zxing-core`), so Gradle
-  needs no extra repository.
+* The ZXing core is compiled from source (`third_party/zxing-core`) by the pure-Java
+  `:third_party:zxing` library module that the app depends on – so Gradle needs no
+  extra repository.
 * The release build enables R8 and resource shrinking; the rules in
   `app/proguard-rules.pro` keep the line numbers for readable stack traces.
 * `assembleRelease` produces an **unsigned** release APK (no release signing config is

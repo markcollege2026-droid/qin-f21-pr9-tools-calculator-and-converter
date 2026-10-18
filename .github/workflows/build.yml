@@ -132,19 +132,19 @@ jobs:
       - name: Report build failure as annotations
         if: failure()
         run: |
-          echo "GRADLE_ERROR log: $(wc -c < gradle-build.log 2>/dev/null || echo missing) bytes, $(wc -l < gradle-build.log 2>/dev/null || echo 0) lines"
+          L=gradle-build.log
+          echo "GRADLE_ERROR log: $(wc -c < $L 2>/dev/null || echo missing) bytes, $(wc -l < $L 2>/dev/null || echo 0) lines"
           dmesg 2>/dev/null | grep -iE "oom|killed process" | tail -3 | sed 's/^/GRADLE_ERROR dmesg: /'
-          echo "GRADLE_ERROR === FAILURE section (40 lines) ==="
-          sed -n '/FAILURE: Build failed/,+40p' gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
-          echo "GRADLE_ERROR === error-ish lines ==="
-          grep -nE "^> Task .*FAILED|error:|Unresolved|OutOfMemory|Could not (resolve|find)|AAPT|exited unexpectedly" gradle-build.log 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /'
-          echo "GRADLE_ERROR === zxing mentions ==="
-          grep -n "zxing" gradle-build.log 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /'
-          for f in hs_err_pid*.log; do
-            [ -e "$f" ] || continue
-            echo "GRADLE_ERROR === JVM crash log: $f ==="
-            head -4 "$f" | sed 's/^/GRADLE_ERROR /'
-          done
+          echo "GRADLE_ERROR === What-went-wrong block ==="
+          awk '/What went wrong/{f=1} f{print} /\\* Try:/{if(f)exit}' "$L" 2>/dev/null | head -25 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === first exception ==="
+          grep -nE "Exception is:|Caused by:|^org\.|^java\.|OutOfMemoryError|OutOfMemory" "$L" 2>/dev/null | head -15 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === kotlin/javac error lines (e:/error:/Unresolved) ==="
+          grep -nE "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -30 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === failed tasks ==="
+          grep -nE "^> Task .*FAILED" "$L" 2>/dev/null | head -10 | sed 's/^/GRADLE_ERROR /'
+          echo "GRADLE_ERROR === tail (last 30) ==="
+          tail -30 "$L" 2>/dev/null | sed 's/^/GRADLE_ERROR /'
           true
 
       # The full log is the ground truth; annotations are a best-effort summary.

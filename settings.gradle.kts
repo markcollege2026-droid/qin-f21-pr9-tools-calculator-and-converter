@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 rootProject.name = "qin-f21-toolbox"
 
 include(":app")
+include(":third_party:zxing")
 include(":core:common")
 include(":core:conversion")
 include(":core:calc")
