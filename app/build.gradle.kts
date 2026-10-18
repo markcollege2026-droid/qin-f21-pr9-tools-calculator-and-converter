@@ -72,12 +72,16 @@ tasks.register("printSources") {
     doLast {
         try {
             val diag = { msg: String -> println("GRADLE_ERROR DIAG $msg") }
-            fun existsOf(d: Any): Boolean = try {
-                d.javaClass.getMethod("exists").invoke(d) as? Boolean ?: false
-            } catch (e: Exception) {
-                try {
-                    (d.javaClass.getMethod("getAsFile").invoke(d) as? java.io.File)?.exists() ?: false
-                } catch (e2: Exception) { false }
+            fun existsOf(d: Any?): Boolean {
+                if (d == null) return false
+                val obj = d
+                return try {
+                    obj.javaClass.getMethod("exists").invoke(obj) as? Boolean ?: false
+                } catch (e: Exception) {
+                    try {
+                        (obj.javaClass.getMethod("getAsFile").invoke(obj) as? java.io.File)?.exists() ?: false
+                    } catch (e2: Exception) { false }
+                }
             }
             fun srcDirsOf(name: String, set: Any?) {
                 if (set == null) { diag("$name: (not present)"); return }
