@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -86,8 +86,39 @@ jobs:
       - name: Set up Gradle (wrapper + dependency cache)
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Surface Gradle errors as annotations
+        if: always()
+        run: |
+          cat > matcher.json <<'EOF'
+          {
+            "problemMatcher": [
+              {
+                "owner": "gradle-build-errors",
+                "pattern": [
+                  { "regexp": "^GRADLE_ERROR (.*)$", "message": "1" }
+                ]
+              }
+            ]
+          }
+          EOF
+          echo "::add-matcher::$(cat matcher.json)"
+
+      - name: Check Gradle configuration (./gradlew help)
+        run: |
+          set -o pipefail
+          ./gradlew help 2>&1 | tee gradle-config.log
+
       - name: Build debug and release APKs
-        run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace 2>&1 | tee gradle-build.log
+
+      - name: Report build failure as annotations
+        if: failure()
+        run: |
+          { grep -E "FAILURE:|What went wrong|Execution failed|Caused by|^[ew]: |> Task .* FAILED|error:|Missing class|SDK location not found" gradle-config.log gradle-build.log 2>/dev/null; \
+            grep -E "^\s*> " gradle-build.log 2>/dev/null | head -20; } \
+            | sort -u | sed 's/^/GRADLE_ERROR /' | head -40 || true
 
       - name: Upload APKs
         uses: actions/upload-artifact@v7
