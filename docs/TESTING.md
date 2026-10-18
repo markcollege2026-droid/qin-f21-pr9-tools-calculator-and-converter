@@ -89,7 +89,8 @@ adb shell am start -n com.qin.f21.toolbox/.MainActivity
 adb logcat | grep -i toolbox
 ```
 
-Checklist: home screen scrolls with the D-pad, digits open the first nine tools, the
+Checklist: every screen shows a focus ring on its first control as soon as it opens, the
+home screen scrolls with the D-pad, digits open the first nine tools, the
 converter accepts hardware keypad digits, the timer and the stopwatch survive the screen
 being turned off, the scanner decodes a printed QR code, the sound meter reacts to a
 sound, GPS locks onto a position and the infrared screen either shows the code list or

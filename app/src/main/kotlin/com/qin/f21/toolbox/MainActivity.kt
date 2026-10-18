@@ -116,6 +116,23 @@ class MainActivity : Activity(), ScreenHost {
             headerIcon.visibility = View.GONE
         }
         screen.onShown()
+        focusFirstStop()
+    }
+
+    /**
+     * Gives the freshly shown screen a keyboard focus stop.
+     *
+     * A D-pad needs one view with the focus or the arrow keys do nothing. The screen roots
+     * are containers, so requesting the focus in the DOWN direction walks into the first
+     * focusable child. An existing focus is never taken away, which matters when a screen
+     * is only resumed rather than rebuilt.
+     */
+    private fun focusFirstStop() {
+        content.post {
+            if (content.findFocus() == null) {
+                content.requestFocus(View.FOCUS_DOWN)
+            }
+        }
     }
 
     private fun iconRes(name: String): Int {

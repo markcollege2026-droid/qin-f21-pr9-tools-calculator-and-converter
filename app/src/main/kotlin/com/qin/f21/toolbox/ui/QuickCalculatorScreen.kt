@@ -36,7 +36,7 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
-        val scroll = android.widget.ScrollView(context)
+        val scroll = android.widget.ScrollView(context).forKeypad()
         val column = Widgets.column(context)
         column.setPadding(
             Widgets.dp(context, 10), Widgets.dp(context, 6),

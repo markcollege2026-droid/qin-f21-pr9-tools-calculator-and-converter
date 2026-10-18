@@ -82,7 +82,7 @@ class RecorderScreen(host: ScreenHost) : Screen(host) {
         ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0) })
 
         root.addView(Widgets.sectionHeader(context, context.getString(R.string.recorder_files)))
-        val scroll = ScrollView(context)
+        val scroll = ScrollView(context).forKeypad()
         listColumn = Widgets.column(context)
         scroll.addView(listColumn, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT

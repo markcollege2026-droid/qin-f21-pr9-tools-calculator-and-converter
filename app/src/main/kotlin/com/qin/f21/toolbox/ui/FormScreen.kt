@@ -45,7 +45,7 @@ class FormScreen(
         val root = Widgets.column(context)
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        val scroll = ScrollView(context)
+        val scroll = ScrollView(context).forKeypad()
         val column = Widgets.column(context)
         column.setPadding(
             Widgets.dp(context, 10), Widgets.dp(context, 8),

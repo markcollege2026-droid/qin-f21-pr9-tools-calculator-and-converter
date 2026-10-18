@@ -57,7 +57,7 @@ class HomeScreen(host: ScreenHost) : Screen(host) {
         )
         root.addView(searchField, searchParams)
 
-        scroll = ScrollView(host.activity)
+        scroll = ScrollView(host.activity).forKeypad()
         scroll.isFillViewport = true
         scroll.setBackgroundColor(Widgets.color(host.activity, R.color.bg))
         list = Widgets.column(host.activity)

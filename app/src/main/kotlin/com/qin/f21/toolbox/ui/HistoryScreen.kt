@@ -57,7 +57,7 @@ class HistoryScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
 
-        val scroll = ScrollView(context)
+        val scroll = ScrollView(context).forKeypad()
         column = Widgets.column(context)
         column.setPadding(
             Widgets.dp(context, 8), Widgets.dp(context, 4),

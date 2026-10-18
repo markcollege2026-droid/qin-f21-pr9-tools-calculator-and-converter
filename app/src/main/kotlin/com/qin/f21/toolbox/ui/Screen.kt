@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import com.qin.f21.toolbox.R
 import com.qin.f21.toolbox.core.hardware.HardwareCapabilities
@@ -39,6 +40,21 @@ interface ScreenHost {
  * and the APK small. Each screen owns its own key handling so the physical D-pad and
  * keypad can be supported precisely.
  */
+/**
+ * Makes a scroll container reachable with the physical D-pad.
+ *
+ * A [ScrollView] only responds to the arrow keys while it holds the focus, and its default
+ * descendant focusability would let it take the focus before its own children. With
+ * [ViewGroup.FOCUS_AFTER_DESCENDANTS] the children keep winning, so this only becomes a
+ * focus stop on screens whose content has nothing focusable inside it - the read-only
+ * screens such as Diagnostics and About, where the D-pad is otherwise unable to scroll.
+ */
+fun ScrollView.forKeypad(): ScrollView {
+    isFocusable = true
+    descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+    return this
+}
+
 abstract class Screen(val host: ScreenHost) {
 
     /** Title shown in the header. */

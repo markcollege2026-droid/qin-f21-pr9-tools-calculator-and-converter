@@ -85,7 +85,7 @@ class StopwatchScreen(host: ScreenHost) : Screen(host) {
         ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
 
         root.addView(Widgets.sectionHeader(context, context.getString(R.string.stopwatch_laps)))
-        val scroll = ScrollView(context)
+        val scroll = ScrollView(context).forKeypad()
         lapColumn = Widgets.column(context)
         scroll.addView(lapColumn, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT

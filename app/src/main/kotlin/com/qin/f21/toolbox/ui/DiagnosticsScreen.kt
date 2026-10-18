@@ -27,7 +27,7 @@ class DiagnosticsScreen(host: ScreenHost) : Screen(host) {
     private lateinit var column: LinearLayout
 
     override fun onCreateView(parent: ViewGroup): View {
-                val scroll = ScrollView(context)
+                val scroll = ScrollView(context).forKeypad()
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         column = Widgets.column(context)
         column.setPadding(

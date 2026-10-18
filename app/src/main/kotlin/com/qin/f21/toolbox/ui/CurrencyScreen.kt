@@ -121,7 +121,7 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
 
-        val noteScroll = ScrollView(context)
+        val noteScroll = ScrollView(context).forKeypad()
         val noteColumn = Widgets.column(context)
         noteLabel = Widgets.caption(context, "")
         noteColumn.addView(noteLabel)

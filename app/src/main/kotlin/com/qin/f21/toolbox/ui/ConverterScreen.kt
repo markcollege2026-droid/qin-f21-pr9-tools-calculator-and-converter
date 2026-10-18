@@ -210,7 +210,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
         ).apply {
             setMargins(Widgets.dp(context, 12), Widgets.dp(context, 6), Widgets.dp(context, 12), 0)
         })
-        val listScroll = ScrollView(context)
+        val listScroll = ScrollView(context).forKeypad()
         listScroll.isVerticalScrollBarEnabled = false
         unitList = Widgets.column(context)
         listScroll.addView(unitList, FrameLayout.LayoutParams(

@@ -79,3 +79,12 @@ The spectrum shows seven Goertzel bands (60 Hz … 10 kHz).
 Every function can be reached without a touch screen: the tool list, the unit pickers,
 the keypad, the lap list and the settings are all focusable and the numeric fields
 accept the hardware keypad.
+
+**Focus.** A pushed screen asks its content for the focus in the DOWN direction once it
+has been laid out, unless something already holds it, so the arrow keys always have a
+starting point. Scroll containers are focusable with
+`descendantFocusability = afterDescendants`: their children win the focus, and the
+container only becomes a stop on read-only screens such as Diagnostics and About, where
+it then scrolls with the arrow keys. The header back arrow is deliberately *not* a focus
+stop, so Enter on a freshly opened tool never navigates away; the physical Back key
+handles that.

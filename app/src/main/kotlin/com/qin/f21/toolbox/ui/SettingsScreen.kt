@@ -29,7 +29,7 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
-        val scroll = ScrollView(context)
+        val scroll = ScrollView(context).forKeypad()
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         column = Widgets.column(context)
         column.setPadding(

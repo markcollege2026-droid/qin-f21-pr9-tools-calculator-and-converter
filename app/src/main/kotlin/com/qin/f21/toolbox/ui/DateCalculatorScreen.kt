@@ -33,7 +33,7 @@ class DateCalculatorScreen(host: ScreenHost) : Screen(host) {
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
-        val scroll = android.widget.ScrollView(context)
+        val scroll = android.widget.ScrollView(context).forKeypad()
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         val column = Widgets.column(context)
         column.setPadding(
