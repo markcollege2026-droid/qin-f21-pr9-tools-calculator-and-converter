@@ -49,7 +49,7 @@ The artefact was checked with `aapt2 dump badging`:
 
 * package `com.qin.f21.toolbox`, `minSdkVersion 30`, `targetSdkVersion 30`;
 * permissions: `CAMERA`, `RECORD_AUDIO`, `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`,
-  `VIBRATE`, `POST_NOTIFICATIONS` – **no `INTERNET`**. Camera, microphone and location are
+  `VIBRATE`, `TRANSMIT_IR`, `POST_NOTIFICATIONS` – **no `INTERNET`**. Camera, microphone and location are
   requested from the tool that needs them, through a visible button;
 * every `<uses-feature>` is declared `not-required`, so the app also installs on
   hardware without a camera, GPS or IR emitter;

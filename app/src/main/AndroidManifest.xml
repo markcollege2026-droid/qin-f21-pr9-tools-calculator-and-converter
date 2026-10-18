@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Normal permission, granted at install time. ConsumerIrManager.transmit() throws
+         without it, so the infrared tool cannot work unless it is declared here. -->
+    <uses-permission android:name="android.permission.TRANSMIT_IR" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
