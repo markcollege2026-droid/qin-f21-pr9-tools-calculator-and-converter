@@ -31,7 +31,9 @@ visible screen, and the screen decides what a key means.
 
 **Framework views only.** No AndroidX, no Material Components, no Compose – the app runs
 on the plain `Theme.Material` of the platform with a custom drawable based design system
-in `core/design`.
+in `core/design`. `docs/design-system.png` is rendered straight from those resources
+(`tools/render_design_sheet.py`), so the palette, the type scale and the icon set in the
+sheet are the ones the app ships.
 
 **Pure logic in pure modules.** `core/common`, `core/conversion` and `core/calc` do not
 import anything from `android.*`, so they compile and run on a plain JVM. That is what

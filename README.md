@@ -73,6 +73,15 @@ See [`docs/HARDWARE.md`](docs/HARDWARE.md) for the per-tool support matrix.
 
 ---
 
+## Design system
+
+![Design system](docs/design-system.png)
+
+The sheet is rendered directly from `core/design/src/main/res` by
+`tools/render_design_sheet.py`, so it shows the shipped palette, type scale and the full
+61-icon set rather than a mock-up. It is a rendering of the resources, not a screenshot
+of the running app.
+
 ## Building
 
 Two build paths are supported, both produce the same app.
@@ -110,7 +119,7 @@ still unverified.
 
 | Item | Size |
 |------|------|
-| Signed APK | **1.10 MB** |
+| Signed APK | **1.10 MiB** (1,157,190 bytes) |
 | `classes.dex` | 3.03 MB (1.01 MB compressed inside the APK) |
 | Compiled resources | 34.5 KB |
 | Bundled assets (rates, IR codes) | 1.1 KB |
@@ -131,7 +140,7 @@ core/hardware/  capability detection, torch, IR, GNSS, mic  (Android)
 core/data/      local store, settings, file provider        (Android)
 core/design/    colours, type scale, drawables, icons      (resources)
 third_party/    vendored ZXing core (Apache 2.0)
-tools/          offline build, self test, icon generator
+tools/          offline build, self test, icon generator, design sheet renderer
 docs/           build, testing, hardware and architecture notes
 ```
 
