@@ -107,28 +107,38 @@ jobs:
         run: |
           # --no-daemon: single JVM for the one-off CI build; the Kotlin compiler
           # runs in-process so no extra daemon JVM competes for the runner's RAM.
+          # Error-looking lines are tagged GRADLE_ERROR so the problem matcher
+          # turns them into annotations (readable without the full log).
           set -o pipefail
           set +e
           ./gradlew --no-daemon \
             :app:assembleDebug :app:assembleRelease \
             -Pkotlin.compiler.execution.strategy=in-process \
-            --stacktrace 2>&1 | tee gradle-build.log
+            --stacktrace 2>&1 | tee gradle-build.log | awk '
+            /FAILURE: Build failed/ || /What went wrong/ || /Execution failed for task/ ||
+            /Caused by:/ || /Exception is:/ || /^e: / || /error: / ||
+            /> Task .* FAILED/ || /Missing class/ || /OutOfMemory/ ||
+            /exited unexpectedly/ || /The build process/ || /SDK location not found/ ||
+            /^[[:space:]]*> (A failure|Could not|No |The |Execution)/ {
+              print "GRADLE_ERROR " $0
+            }'
           rc=${PIPESTATUS[0]}
           exit $rc
 
       - name: Report build failure as annotations
         if: failure()
         run: |
+          echo "GRADLE_ERROR log: $(wc -c < gradle-build.log 2>/dev/null || echo missing) bytes, $(wc -l < gradle-build.log 2>/dev/null || echo 0) lines"
+          dmesg 2>/dev/null | grep -iE "oom|killed process" | tail -3 | sed 's/^/GRADLE_ERROR dmesg: /'
+          echo "GRADLE_ERROR === head of gradle-build.log ==="
+          head -6 gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
           echo "GRADLE_ERROR === tail of gradle-build.log ==="
-          tail -25 gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
+          tail -8 gradle-build.log 2>/dev/null | sed 's/^/GRADLE_ERROR /'
           for f in hs_err_pid*.log; do
             [ -e "$f" ] || continue
             echo "GRADLE_ERROR === JVM crash log: $f ==="
-            head -10 "$f" | sed 's/^/GRADLE_ERROR /'
+            head -4 "$f" | sed 's/^/GRADLE_ERROR /'
           done
-          echo "GRADLE_ERROR === targeted grep ==="
-          grep -E "FAILURE:|What went wrong|Execution failed for task|Caused by:|^[ew]: |error: |Missing class|SDK location not found|OutOfMemory|exited unexpectedly|daemon disappeared" \
-            gradle-build.log 2>/dev/null | sort -u | head -10 | sed 's/^/GRADLE_ERROR /'
           true
 
       - name: Upload APKs
