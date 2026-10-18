@@ -25,7 +25,7 @@ capability registry (`core/hardware/Capabilities.kt`) first and shows an explici
 | Tool | Requirement | Behaviour when the hardware is missing |
 |------|-------------|----------------------------------------|
 | Unit converter, currency, time zones, date, calculators, geometry, stopwatch, timer, history, favourites, settings, about | software only | always available |
-| Sound meter, voice recorder | `AudioRecord` + `RECORD_AUDIO` | the microphone capability is checked, the permission is requested on first use, otherwise an "unavailable" card is shown |
+| Sound meter, voice recorder | `AudioRecord` + `RECORD_AUDIO` | the microphone capability is checked first; if the permission is missing the tool shows a card with a "Grant permission" button, and granting it rebuilds the screen |
 | QR/barcode scanner, camera | `CameraManager` + `CAMERA` | the tool shows "camera not available"; every camera and flash is declared `not-required` in the manifest so the app still installs |
 | Flashlight | camera with a flash unit (`FLASH_INFO_AVAILABLE`) | the button is disabled and the reason is shown |
 | Infrared remote | `ConsumerIrManager.hasIrEmitter()` | the code list stays readable as a reference, the "send" buttons are replaced by an explanation |

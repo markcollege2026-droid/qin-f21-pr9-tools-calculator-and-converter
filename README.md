@@ -53,9 +53,11 @@ the hardware keys.
   (`app/src/main/assets/data/`).
 * The barcode decoder is the Apache-2.0 licensed ZXing *core*, vendored in
   `third_party/zxing-core/` – no code or image leaves the device.
-* The only permissions requested are `CAMERA`, `RECORD_AUDIO`, `ACCESS_FINE_LOCATION`,
-  `ACCESS_COARSE_LOCATION`, `VIBRATE` and `POST_NOTIFICATIONS`, and every one of them is
-  asked for only when the matching tool is opened.
+* The permissions are `CAMERA`, `RECORD_AUDIO`, `ACCESS_FINE_LOCATION`,
+  `ACCESS_COARSE_LOCATION`, `VIBRATE` and `POST_NOTIFICATIONS`. The three dangerous ones
+  are requested only from the tool that needs them (camera, microphone, GPS) with an
+  explicit "Grant permission" button, never at startup. `VIBRATE` is install-time, and the
+  timer's notification degrades to a vibration alone if notifications are blocked.
 
 ## Hardware honesty
 

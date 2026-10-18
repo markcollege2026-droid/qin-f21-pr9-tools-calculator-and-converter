@@ -172,7 +172,11 @@ class MainActivity : Activity(), ScreenHost {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Toolbox.refreshCapabilities()
-        stack.lastOrNull()?.onShown()
+        val granted = grantResults.any { it == PackageManager.PERMISSION_GRANTED }
+        val screen = stack.lastOrNull() ?: return
+        // Screens build their permission state into the view tree, so a granted permission
+        // has to rebuild the screen; a denial only refreshes the current one.
+        if (granted) show(screen) else screen.onShown()
     }
 
     override fun onResume() {

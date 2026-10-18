@@ -37,6 +37,10 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
             root.addView(unavailableCard())
             return root
         }
+        if (!Toolbox.capabilities.hasMicrophonePermission) {
+            root.addView(permissionCard())
+            return root
+        }
 
         val readingCard = Widgets.column(context)
         readingCard.gravity = Gravity.CENTER
@@ -111,6 +115,37 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
         else -> hz.toString()
     }
 
+    /**
+     * The microphone exists but the app may not open it yet. The request is a deliberate
+     * button instead of an automatic prompt, so a rebuild of the screen never loops.
+     */
+    private fun permissionCard(): View {
+        val context = host.activity
+        val card = Widgets.column(context)
+        card.setPadding(
+            Widgets.dp(context, 12), Widgets.dp(context, 14),
+            Widgets.dp(context, 12), Widgets.dp(context, 14)
+        )
+        card.background = Widgets.roundedBackground(
+            context, Widgets.color(context, R.color.surface_alt), Widgets.color(context, R.color.outline_strong)
+        )
+        card.addView(Widgets.text(context, context.getString(R.string.sound_unavailable_title), R.style.Text_Subtitle))
+        card.addView(Widgets.caption(context, context.getString(R.string.mic_permission_needed)))
+        val button = Widgets.button(context, context.getString(R.string.action_grant_permission))
+        button.setOnClickListener {
+            host.askPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), REQUEST_MIC)
+        }
+        val params = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.topMargin = Widgets.dp(context, 10)
+        card.addView(button, params)
+        val holder = Widgets.column(context)
+        holder.setPadding(Widgets.dp(context, 8), Widgets.dp(context, 8), Widgets.dp(context, 8), 0)
+        holder.addView(card)
+        return holder
+    }
+
     private fun unavailableCard(): View {
         val context = host.activity
         val card = Widgets.column(context)
@@ -173,5 +208,9 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
 
     override fun onHidden() {
         meter.stop()
+    }
+
+    companion object {
+        const val REQUEST_MIC = 11
     }
 }

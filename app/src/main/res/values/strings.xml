@@ -139,6 +139,7 @@
     <string name="sound_calibration_note">Phone microphones are not calibrated. The dB value is an estimate: the exact reading is the dBFS level, the offset can be changed in Settings.</string>
     <string name="sound_unavailable_title">Microphone not available</string>
     <string name="sound_unavailable_message">No microphone was reported, or the permission was denied.</string>
+    <string name="mic_permission_needed">The microphone permission is needed. It is only used while a microphone tool is open.</string>
 
     <!-- ==================== Recorder ==================== -->
     <string name="recorder_files">Recordings</string>
