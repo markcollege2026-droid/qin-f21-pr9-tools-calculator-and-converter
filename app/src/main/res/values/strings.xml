@@ -245,6 +245,7 @@
 
     <!-- ==================== About ==================== -->
     <string name="about_version">Version %1$s</string>
+    <string name="about_min_os">Minimum Android 11 (API 30)</string>
     <string name="about_tagline">An offline toolbox for the Qin F21 Pro.</string>
     <string name="about_offline_title">Offline by design</string>
     <string name="about_offline_body">The app does not request the internet permission, so it cannot reach any server. There are no ads, no analytics and no cloud storage. Exchange rates, infrared codes and all reference data are bundled in the package.</string>

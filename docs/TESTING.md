@@ -18,6 +18,10 @@ plus `tools/selftest/Selftest.kt` with `kotlinc` and runs them on a plain JVM.
 
 **Result: 183 checks, 0 failures.**
 
+The self test (and the offline build below) also runs in CI on every push and pull
+request – see `.github/workflows/build.yml` and `docs/BUILD.md`, section "Continuous
+integration".
+
 | Area | Covered |
 |------|---------|
 | JSON | parsing, nested objects, arrays, defaults, writer round trip |
@@ -75,7 +79,7 @@ The signature was verified with `apksigner verify --print-certs` (v1 + v2 + v3).
 | Torch, IR emitter, GNSS, microphone | **not executed** | need the real hardware |
 | D-pad and T9 keypad navigation | **implemented, not exercised** | needs a device |
 | Timer alarm while another tool is open | **implemented, not exercised** | needs a device; the state lives in `Timers`, so it is no longer tied to the screen |
-| Gradle build | **not executed** | no Gradle distribution, no access to the Google/Maven repositories |
+| Gradle build | **executed in CI** | `./gradlew :app:lintRelease :app:assembleDebug :app:assembleRelease` runs on every push/PR with the Android SDK (see `docs/BUILD.md`); the initial commit predates that, which is why the offline pipeline was the only locally verified path at the time |
 | Installed size on a device | **estimated** | the APK size is measured; the installed size is derived from it (see `README.md`) |
 
 ### Bugs the review found without running the app

@@ -1,0 +1,230 @@
+# Continuous integration for the Qin F21 Toolbox.
+#
+# Both supported build paths run on every push and pull request:
+#
+#   offline-build:
+#     1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner, android.jar)
+#     2. self test the pure Kotlin modules (183 checks)
+#     3. compile, dex, package and sign the APK without an Android SDK
+#     4. verify the signature and upload the APK as an artefact
+#
+#   gradle-build:
+#     1. set up JDK 17 and the Android SDK (platform 30)
+#     2. build the app with Gradle (AGP 7.4.2, Kotlin 1.8.22)
+#     3. upload the debug and release APKs as artefacts
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  offline-build:
+    name: Offline pipeline (self test + APK)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Cache offline tool-chain
+        uses: actions/cache@v6
+        with:
+          path: tools/toolchain
+          key: toolchain-v1-${{ hashFiles('tools/fetch-toolchain.sh') }}
+          restore-keys: |
+            toolchain-v1-
+
+      - name: Fetch offline tool-chain
+        run: tools/fetch-toolchain.sh
+
+      - name: Run self test (pure Kotlin modules, 183 checks)
+        run: tools/selftest.sh
+
+      - name: Build and sign APK (offline pipeline)
+        run: tools/build-offline.sh
+
+      - name: Verify APK signature
+        run: |
+          TC=tools/toolchain
+          "$TC/jdk/bin/java" -cp "$TC/apksigner.jar" \
+            com.android.apksigner.ApkSignerTool verify --print-certs \
+            build/outputs/qin-f21-toolbox-1.0.0.apk
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: qin-f21-toolbox-1.0.0.apk
+          path: build/outputs/qin-f21-toolbox-1.0.0.apk
+          if-no-files-found: error
+
+  gradle-build:
+    name: Gradle build (Android SDK 30)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK (platform 30, build-tools 33.0.1)
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-30 build-tools;33.0.1'
+
+      - name: Point Gradle at the SDK
+        run: |
+          if [ -z "${ANDROID_HOME:-}" ]; then
+            echo "sdk.dir=$HOME/.android/sdk" > local.properties
+          fi
+
+      - name: Set up Gradle (wrapper + dependency cache)
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Surface Gradle errors as annotations
+        if: always()
+        run: |
+          cat > matcher.json <<'EOF'
+          {
+            "problemMatcher": [
+              {
+                "owner": "gradle-build-errors",
+                "pattern": [
+                  { "regexp": "^GRADLE_ERROR (.*)$", "message": "1" }
+                ]
+              }
+            ]
+          }
+          EOF
+          echo "::add-matcher::$GITHUB_WORKSPACE/matcher.json"
+
+      - name: Build debug and release APKs
+        run: |
+          # --no-daemon: single JVM for the one-off CI build; the Kotlin compiler
+          # runs in-process so no extra daemon JVM competes for the runner's RAM.
+          # Error-looking lines are tagged GRADLE_ERROR so the problem matcher
+          # turns them into annotations (readable without the full log).
+          set -o pipefail
+          set +e
+          # :app:lintRelease runs BEFORE the assembles: the automatic lintVitalRelease
+          # gate that assembleRelease depends on fails with no report and no issue
+          # list, while the plain lint task prints the issues and writes the XML.
+          ./gradlew --no-daemon \
+            :app:lintRelease :app:assembleDebug :app:assembleRelease \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            --stacktrace 2>&1 | tee gradle-build.log | awk '
+            /^GRADLE_ERROR / { print; next }  # already tagged (diagnostic task, earlier steps)
+            /FAILURE: Build failed/ || /What went wrong/ || /Execution failed for task/ ||
+            /Caused by:/ || /Exception is:/ || /^e: / || /error: / ||
+            /> Task .* FAILED/ || /Missing class/ || /OutOfMemory/ ||
+            /exited unexpectedly/ || /The build process/ || /SDK location not found/ ||
+            / Error: .* \[[A-Z][A-Za-z]+\]/ || /fatal errors/ ||
+            /^[[:space:]]*> (A failure|Could not|No |The |Execution)/ {
+              print "GRADLE_ERROR " $0
+            }'
+          rc=${PIPESTATUS[0]}
+          exit $rc
+
+      # The runner only reliably turns the FIRST FEW ::error/matcher lines of a
+      # step into annotations, so the findings are collected once and emitted by
+      # three small steps (lint findings first - they are the most important).
+      - name: Collect failure findings
+        if: failure()
+        run: |
+          L=gradle-build.log
+          F=/tmp/gradle-report-lines.txt
+          : > "$F"
+          echo "gradle log: $(wc -c < $L 2>/dev/null || echo missing) bytes, $(wc -l < $L 2>/dev/null || echo 0) lines" >> "$F"
+          dmesg 2>/dev/null | grep -iE "oom|killed process" | tail -2 | sed 's/^/dmesg: /' >> "$F" || true
+          awk '/What went wrong/{f=1;next} f && /^$/{exit} f{print}' "$L" 2>/dev/null | head -8 | sed 's/^/WW: /' >> "$F" || true
+          grep -E "Exception is:|Caused by:|^org\.|^java\.|OutOfMemory" "$L" 2>/dev/null | head -4 | sed 's/^/EXC: /' >> "$F" || true
+          grep -E "^e: |error:|Unresolved reference|cannot find symbol" "$L" 2>/dev/null | head -8 | sed 's/^/ERR: /' >> "$F" || true
+          # A fatal lint run aborts BEFORE the report is finished: the XML exists but
+          # has no issue elements, and the console prints no issue list. Re-run the
+          # lint task with abortOnError=false so it completes: it then prints every
+          # finding to the console and writes the full report.
+          cat > /tmp/lint-nofail.gradle <<'EOF'
+          allprojects {
+              plugins.withId("com.android.application") {
+                  android {
+                      lintOptions {
+                          abortOnError false
+                      }
+                  }
+              }
+          }
+          EOF
+          ./gradlew --no-daemon -I /tmp/lint-nofail.gradle :app:lintRelease 2>&1 \
+            | grep -E "Error: |Fatal: " | head -15 | sed 's/^/LINT run: /' >> "$F" || true
+          # AGP 7.4 prints only "Lint found fatal errors" to the console; the issues
+          # themselves live in the XML report - summarize it here.
+          X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1 || true)
+          if [ -n "$X" ]; then
+            echo "lint report: $X ($(wc -c < "$X" 2>/dev/null) bytes)" >> "$F"
+            FLAT=$(tr '\n' ' ' < "$X" 2>/dev/null) || true
+            echo "LINT issues: $(printf '%s' "$FLAT" | grep -oE '<issue\b' | wc -l) tags, $(printf '%s' "$FLAT" | grep -oE 'severity="Fatal"' | wc -l) fatal, $(printf '%s' "$FLAT" | grep -oE 'severity="Error"' | wc -l) error" >> "$F"
+            # the fatal issues fail the build - print each one with its first location
+            printf '%s' "$FLAT" | grep -oE '<issue[^>]*severity="Fatal"[^>]*>' | head -4 | cut -c1-350 | sed 's/^/LINT FATAL: /' >> "$F" || true
+            printf '%s' "$FLAT" | grep -oE '<issue[^>]*severity="Fatal"[^>]*><location[^>]*/>' | head -4 | sed 's/.*<location/location/' | cut -c1-180 | sed 's/^/LINT FATAL at: /' >> "$F" || true
+          else
+            echo "lint: no xml report found under app/build" >> "$F"
+          fi
+          grep -E "^> Task .*FAILED" "$L" 2>/dev/null | head -3 | sed 's/^/FAILED: /' >> "$F" || true
+          tail -8 "$L" 2>/dev/null | sed 's/^/TAIL: /' >> "$F" || true
+          echo "findings: $(wc -l < "$F") lines"
+
+      - name: Report failure - lint and compile errors
+        if: failure()
+        run: |
+          F=/tmp/gradle-report-lines.txt
+          grep -E "^(ERR:|LINT|lint)" "$F" 2>/dev/null | head -25 | \
+            while IFS= read -r line; do
+              line=$(printf '%s' "$line" | tr -d '\000-\037\177')
+              if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi
+            done
+          true
+
+      - name: Report failure - what went wrong
+        if: failure()
+        run: |
+          F=/tmp/gradle-report-lines.txt
+          grep -E "^(gradle log|dmesg:|WW:|EXC:)" "$F" 2>/dev/null | head -14 | \
+            while IFS= read -r line; do
+              line=$(printf '%s' "$line" | tr -d '\000-\037\177')
+              if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi
+            done
+          true
+
+      - name: Report failure - failed tasks and log tail
+        if: failure()
+        run: |
+          F=/tmp/gradle-report-lines.txt
+          grep -E "^(FAILED:|TAIL:)" "$F" 2>/dev/null | head -12 | \
+            while IFS= read -r line; do
+              line=$(printf '%s' "$line" | tr -d '\000-\037\177')
+              if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi
+            done
+          true
+
+      # The full log is the ground truth; annotations are a best-effort summary.
+      - name: Upload failure log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-build-failure-log
+          path: |
+            gradle-build.log
+            hs_err_pid*.log
+          if-no-files-found: ignore
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v7
+        with:
+          name: qin-f21-toolbox-gradle-apks
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error

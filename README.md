@@ -1,8 +1,13 @@
 # Qin F21 Toolbox
 
+[![Build](https://github.com/markcollege2026-droid/qin-f21-pr9-tools-calculator-and-converter/actions/workflows/build.yml/badge.svg)](https://github.com/markcollege2026-droid/qin-f21-pr9-tools-calculator-and-converter/actions/workflows/build.yml)
+
 An **offline utility toolbox** for the Qin F21 Pro (Xiaomi Qin F21 Pro, 2.8" 480 × 640,
 Android 11 / API 30). The app contains 21 tools in five categories, uses no third party
 runtime dependency, has **no `INTERNET` permission** and never contacts a server.
+
+**Requires Android 11 (API 30) or newer** – that is also the operating system of the
+target device, so nothing below Android 11 is supported or tested.
 
 ```
 Convert   Unit converter · Currency · Time zones · Date & time
@@ -48,6 +53,18 @@ the hardware keys.
 
 * The manifest does **not** declare `android.permission.INTERNET` – the process cannot
   open a socket at all.
+* `usesCleartextTraffic="false"` plus a strict `network_security_config` keep that true
+  even if a network permission is ever added later.
+* `installLocation="internalOnly"` blocks installation on shared external storage, where
+  the APK (and with it the bundled data) would be world-readable.
+* The `android.app.lib_name` meta-data asserts the package contains no native
+  libraries; a tampered APK with injected `.so` files fails installation.
+* `allowBackup="false"` and explicitly non-exported components: nothing in the app is
+  reachable from other apps or pulled into a device backup.
+* All data (history, settings, photos, recordings) stays in the app-private
+  `filesDir` / `getExternalFilesDir()`; sharing is done with per-URI read grants
+  through a file provider that only serves the app-private directory
+  (canonical-path check against traversal, read-only).
 * No ads, no analytics, no crash reporting, no cloud, no account.
 * Exchange rates, infrared codes and all reference data are **bundled inside the APK**
   (`app/src/main/assets/data/`).
@@ -86,7 +103,10 @@ of the running app.
 
 ## Building
 
-Two build paths are supported, both produce the same app.
+Two build paths are supported, both produce the same app, and both run in CI
+(`.github/workflows/build.yml`) on every push and pull request: the offline pipeline
+(self test + signed APK, no SDK needed) and the standard Gradle build (with the Android
+SDK).
 
 ### 1. Offline pipeline (no Android SDK needed)
 

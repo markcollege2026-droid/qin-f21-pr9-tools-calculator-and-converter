@@ -76,8 +76,14 @@ log "linking resources"
 log "compiling Java sources (R class + ZXing core)"
 find "$BUILD/gen" -name "*.java" > "$BUILD/gen-sources.txt"
 find "$ROOT/third_party" -name "*.java" >> "$BUILD/gen-sources.txt"
-javac -nowarn -encoding UTF-8 -source 8 -target 8 -bootclasspath "$ANDROID_JAR" \
-  -d "$BUILD/rclasses" @"$BUILD/gen-sources.txt" 2>&1 | grep -v "bootstrap class path" | head -20 || true
+[ -s "$BUILD/gen-sources.txt" ] || fail "no Java sources found"
+mkdir -p "$BUILD/rclasses"
+if ! javac -nowarn -encoding UTF-8 -source 8 -target 8 \
+      -bootclasspath "$ANDROID_JAR" \
+      -d "$BUILD/rclasses" @"$BUILD/gen-sources.txt" > "$BUILD/javac.log" 2>&1; then
+  cat "$BUILD/javac.log"
+  fail "javac failed"
+fi
 
 # --- 4. compile the Kotlin sources ------------------------------------------
 log "compiling Kotlin sources"
@@ -87,7 +93,7 @@ find "$ROOT"/core/*/src/main/kotlin "$APP/src/main/kotlin" -name "*.kt" > "$BUIL
   -classpath "$ANDROID_JAR:$BUILD/rclasses" \
   -jvm-target 1.8 \
   -nowarn \
-  -Xjvm-default=all \
+  -jvm-default=enable \
   -d "$BUILD/classes" \
   @"$BUILD/kt-sources.txt"
 
@@ -126,6 +132,29 @@ java -cp "$APKSIGNER_JAR" com.android.apksigner.ApkSignerTool sign \
 APK="$ROOT/build/outputs/qin-f21-toolbox-$VERSION_NAME.apk"
 log "verifying signature"
 java -cp "$APKSIGNER_JAR" com.android.apksigner.ApkSignerTool verify --print-certs "$APK" | head -3
+
+# --- 8. verify install requirements ------------------------------------------
+# Android 11 (API 30, "R") and newer reject an APK whose resources.arsc is not
+# stored uncompressed and aligned on a 4-byte boundary, so this check is part
+# of the build, not a spot check.
+log "verifying resources.arsc alignment (required to install on API 30+)"
+python3 - "$APK" <<'PY' || fail "resources.arsc is not stored/aligned - the APK would fail to install"
+import sys, zipfile
+apk = sys.argv[1]
+raw = open(apk, "rb").read()
+with zipfile.ZipFile(apk) as z:
+    info = z.getinfo("resources.arsc")
+off = info.header_offset
+sig = raw[off:off + 4]
+name_len = int.from_bytes(raw[off + 26:off + 28], "little")
+extra_len = int.from_bytes(raw[off + 28:off + 30], "little")
+method = int.from_bytes(raw[off + 8:off + 10], "little")
+data_off = off + 30 + name_len + extra_len
+assert sig == b"PK\x03\x04", "resources.arsc local header not found"
+assert method == zipfile.ZIP_STORED, "resources.arsc must be stored uncompressed"
+assert data_off % 4 == 0, f"resources.arsc data offset {data_off} not 4-byte aligned"
+print(f"resources.arsc: stored uncompressed, data offset {data_off}, 4-byte aligned - OK")
+PY
 
 python3 - "$APK" <<'PY'
 import os, sys, zipfile

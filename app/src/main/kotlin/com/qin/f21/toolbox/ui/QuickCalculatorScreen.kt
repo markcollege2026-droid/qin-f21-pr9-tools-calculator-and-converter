@@ -253,10 +253,12 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
                     val a = (values["a"] ?: 0.0).toLong()
                     val b = (values["b"] ?: 0.0).toLong()
                     val factors = NumberCalculator.factorize(a)
+                    // toString(): the resource uses %s slots, and lint rejects
+                    // raw Long arguments for them (StringFormatMatches)
                     host.activity.getString(
                         R.string.qc_number_result,
-                        NumberCalculator.gcd(a, b),
-                        NumberCalculator.lcm(a, b),
+                        NumberCalculator.gcd(a, b).toString(),
+                        NumberCalculator.lcm(a, b).toString(),
                         if (factors.isEmpty()) "-" else factors.joinToString(" × ") { (it.first.toString() + if (it.second > 1) "^" + it.second else "") },
                         if (NumberCalculator.isPrime(a)) host.activity.getString(R.string.yes) else host.activity.getString(R.string.no)
                     )
@@ -273,10 +275,12 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
                 listOf(FormScreen.FormField("number", "Number", "1994")),
                 { values ->
                     val number = (values["number"] ?: 0.0).toInt()
+                    // toString(): the resource uses %s slots, and lint rejects
+                    // numeric arguments for them (StringFormatMatches)
                     host.activity.getString(
                         R.string.qc_roman_result,
                         NumberCalculator.toRoman(number),
-                        NumberCalculator.fromRoman(NumberCalculator.toRoman(number))
+                        NumberCalculator.fromRoman(NumberCalculator.toRoman(number)).toString()
                     )
                 }
             )
@@ -428,12 +432,14 @@ class QuickCalculatorScreen(host: ScreenHost) : Screen(host) {
                         (values["day"] ?: 1.0).toInt().coerceIn(1, 28)
                     )
                     val difference = DateCalculator.age(birth, LocalDate.now())
+                    // toString(): the resource uses %s slots, and lint rejects
+                    // numeric arguments for them (StringFormatMatches)
                     host.activity.getString(
                         R.string.qc_age_result,
-                        difference.years,
-                        difference.months,
-                        difference.days,
-                        difference.totalDays
+                        difference.years.toString(),
+                        difference.months.toString(),
+                        difference.days.toString(),
+                        difference.totalDays.toString()
                     )
                 }
             )

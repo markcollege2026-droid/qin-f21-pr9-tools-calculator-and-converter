@@ -36,20 +36,23 @@ android {
         jvmTarget = "1.8"
     }
 
-    sourceSets {
-        getByName("main") {
-            // The ZXing core is vendored in the repository so that the app can be built
-            // and audited without downloading anything.
-            java.srcDir("../../third_party/zxing-core")
-        }
-    }
-
     packagingOptions {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/DEPENDENCIES")
+    }
+
+    lint {
+        // ExpiredTargetSdkVersion (fatal) enforces the Google Play policy that apps
+        // target API 31+. This app is not distributed through Play - it is sideloaded
+        // onto the Qin F21 Pro, an Android 11 (API 30) appliance - so targetSdk 30 is
+        // the correct value by design and the policy check does not apply.
+        disable += "ExpiredTargetSdkVersion"
     }
 }
 
 dependencies {
+    // Vendored ZXing core, compiled from source by the :third_party:zxing Java
+    // library (see its build file). Comes in as a normal classpath dependency.
+    implementation(project(":third_party:zxing"))
     implementation(project(":core:common"))
     implementation(project(":core:conversion"))
     implementation(project(":core:calc"))

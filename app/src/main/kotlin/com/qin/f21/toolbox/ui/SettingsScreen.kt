@@ -228,8 +228,9 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
             } ?: ""
             val json = JsonParser.parse(text)
             val result = Toolbox.store.importDocument(json, merge = true)
-            if (result.error != null) {
-                host.showMessage(result.error)
+            val error = result.error
+            if (error != null) {
+                host.showMessage(error)
             } else {
                 host.showMessage(
                     host.activity.getString(
