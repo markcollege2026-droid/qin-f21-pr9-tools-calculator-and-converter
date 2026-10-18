@@ -169,8 +169,11 @@ jobs:
           X=$(find app/build -path "*lint-results*" -name "*.xml" 2>/dev/null | head -1 || true)
           if [ -n "$X" ]; then
             echo "lint report: $X ($(wc -c < "$X" 2>/dev/null) bytes)" >> "$F"
-            echo "LINT issues: $(grep -c '<issue ' "$X" 2>/dev/null) tags, $(grep -c 'severity=\"Fatal\"' "$X" 2>/dev/null) fatal, $(grep -c 'severity=\"Error\"' "$X" 2>/dev/null) error" >> "$F"
-            tr '\n' ' ' < "$X" 2>/dev/null | grep -oE '<issue [^>]*' | head -5 | cut -c1-280 | sed 's/^/LINT tag: /' >> "$F" || true
+            FLAT=$(tr '\n' ' ' < "$X" 2>/dev/null) || true
+            echo "LINT issues: $(printf '%s' "$FLAT" | grep -oE '<issue\b' | wc -l) tags, $(printf '%s' "$FLAT" | grep -oE 'severity="Fatal"' | wc -l) fatal, $(printf '%s' "$FLAT" | grep -oE 'severity="Error"' | wc -l) error" >> "$F"
+            # the fatal issues fail the build - print each one with its first location
+            printf '%s' "$FLAT" | grep -oE '<issue[^>]*severity="Fatal"[^>]*>' | head -4 | cut -c1-350 | sed 's/^/LINT FATAL: /' >> "$F" || true
+            printf '%s' "$FLAT" | grep -oE '<issue[^>]*severity="Fatal"[^>]*><location[^>]*/>' | head -4 | sed 's/.*<location/location/' | cut -c1-180 | sed 's/^/LINT FATAL at: /' >> "$F" || true
           else
             echo "lint: no xml report found under app/build" >> "$F"
           fi

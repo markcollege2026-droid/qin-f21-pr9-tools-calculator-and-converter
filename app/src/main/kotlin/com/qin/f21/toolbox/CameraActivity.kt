@@ -279,6 +279,10 @@ class CameraActivity : Activity() {
         imageReader = null
     }
 
+    // The torch button is only reachable while the camera is open, which in turn
+    // only happens with the CAMERA permission granted (see openCamera()). Lint
+    // cannot see that, so the MissingPermission finding is suppressed here.
+    @SuppressLint("MissingPermission")
     private fun toggleTorch() {
         val device = cameraDevice ?: return
         val id = cameraId ?: return
