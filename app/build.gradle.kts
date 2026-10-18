@@ -39,6 +39,14 @@ android {
     packagingOptions {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/DEPENDENCIES")
     }
+
+    lint {
+        // ExpiredTargetSdkVersion (fatal) enforces the Google Play policy that apps
+        // target API 31+. This app is not distributed through Play - it is sideloaded
+        // onto the Qin F21 Pro, an Android 11 (API 30) appliance - so targetSdk 30 is
+        // the correct value by design and the policy check does not apply.
+        disable += "ExpiredTargetSdkVersion"
+    }
 }
 
 // CI diagnostic: prints exactly which source directories (and whether they exist)
