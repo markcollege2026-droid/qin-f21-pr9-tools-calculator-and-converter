@@ -77,6 +77,24 @@ The signature was verified with `apksigner verify --print-certs` (v1 + v2 + v3).
 | Gradle build | **not executed** | no Gradle distribution, no access to the Google/Maven repositories |
 | Installed size on a device | **estimated** | the APK size is measured; the installed size is derived from it (see `README.md`) |
 
+### Bugs the review found without running the app
+
+The self test cannot see Android behaviour, so a careful read of the code was done as
+well. It found and fixed, among others:
+
+* every colour lookup went through `Theme.resolveAttribute` with a `@color` id, which
+  returns 0 for anything that is not a theme attribute - the whole interface would have
+  been painted black;
+* the countdown and the stopwatch kept their state in their screens, so leaving the screen
+  cancelled a running countdown and lost the stopwatch time;
+* focusable rows were drawn with a static background, so the D-pad focus was invisible;
+* a new screen had no focused view, so the arrow keys did nothing until something was
+  tapped, and a scroll container could not be scrolled from the keypad at all;
+* the sound meter and the camera activity updated views from a background thread.
+
+These are the kind of defects that a device or emulator run finds in minutes and that a
+static review only partly catches; they are listed so the remaining risk is easy to judge.
+
 The most likely sources of runtime problems are therefore in the Android specific code
 paths (Camera2, `AudioRecord`, `ConsumerIrManager`, `LocationManager` callbacks) and in
 the layout measurements of the smallest screens. They are written against the API 30

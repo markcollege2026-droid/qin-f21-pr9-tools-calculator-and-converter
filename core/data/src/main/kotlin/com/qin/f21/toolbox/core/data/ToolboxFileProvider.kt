@@ -20,7 +20,9 @@ class ToolboxFileProvider : ContentProvider() {
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
         val file = resolve(uri) ?: return null
-        file.parentFile?.mkdirs()
+        // Never create anything here: a missing file is reported as such instead of
+        // producing an empty folder on the device.
+        if (!file.isFile) return null
         return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     }
 

@@ -176,11 +176,15 @@ object Widgets {
         return field
     }
 
-    fun color(context: Context, id: Int): Int {
-        val typed = TypedValue()
-        context.theme.resolveAttribute(id, typed, true)
-        return typed.data
-    }
+    /**
+     * Resolves a colour resource.
+     *
+     * This used to call `Theme.resolveAttribute`, which only accepts *attribute* ids: for a
+     * plain `@color/...` resource it returns false and leaves the value at 0, which would
+     * have painted the whole interface black. Every caller passes a colour resource, so a
+     * direct lookup is both correct and faster.
+     */
+    fun color(context: Context, id: Int): Int = context.getColor(id)
 
     fun roundedBackground(
         context: Context,
