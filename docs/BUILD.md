@@ -60,9 +60,13 @@ reproducible.
 * The JDK from the `jdk11` npm package is a full JDK (it ships `javac`, `jar` and
   `keytool`); a bare JRE is not enough for this pipeline.
 * `apksigner` needs an existing `build/outputs` directory.
-* `zipalign` is not part of the pipeline (the binary that could be downloaded needs a
-  `libc++.so` that is not available). The APK is still valid and installable; the
-  alignment is only an optimisation.
+* No external `zipalign` binary is needed: `tools/package_apk.py` writes every
+  uncompressed entry 4-byte aligned (padding the local header's extra field, the
+  same technique zipalign uses) while assembling the APK. This is a **requirement,
+  not an optimisation**: Android 11 (API 30, "R") and newer refuse to install an
+  APK whose `resources.arsc` is not stored uncompressed and aligned on a 4-byte
+  boundary. `tools/build-offline.sh` verifies the alignment of the final signed
+  APK and fails the build if it is wrong.
 
 ### Continuous integration
 
