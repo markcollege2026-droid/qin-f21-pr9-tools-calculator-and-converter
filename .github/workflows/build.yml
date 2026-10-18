@@ -130,13 +130,12 @@ jobs:
           rc=${PIPESTATUS[0]}
           exit $rc
 
-      - name: Report build failure as annotations
+      # The runner only reliably turns the FIRST FEW ::error/matcher lines of a
+      # step into annotations, so the findings are collected once and emitted by
+      # three small steps (lint findings first - they are the most important).
+      - name: Collect failure findings
         if: failure()
         run: |
-          # Emits job-level annotations with the runner's native '::error ::'
-          # command (independent of the problem matcher, which stops converting
-          # lines partway through a step). Budget is ~50 annotations per job, so
-          # the findings file is capped.
           L=gradle-build.log
           F=/tmp/gradle-report-lines.txt
           : > "$F"
@@ -157,12 +156,39 @@ jobs:
           fi
           grep -E "^> Task .*FAILED" "$L" 2>/dev/null | head -3 | sed 's/^/FAILED: /' >> "$F" || true
           tail -8 "$L" 2>/dev/null | sed 's/^/TAIL: /' >> "$F" || true
-          n=0
-          while IFS= read -r line; do
-            [ -n "$line" ] || continue
-            n=$((n+1)); [ "$n" -gt 46 ] && break
-            printf '::error ::%s\n' "${line//::/:}"
-          done < "$F"
+          echo "findings: $(wc -l < "$F") lines"
+
+      - name: Report failure - lint and compile errors
+        if: failure()
+        run: |
+          F=/tmp/gradle-report-lines.txt
+          grep -E "^(ERR:|LINT|lint)" "$F" 2>/dev/null | head -20 | \
+            while IFS= read -r line; do
+              line=$(printf '%s' "$line" | tr -d '\000-\037\177')
+              if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi
+            done
+          true
+
+      - name: Report failure - what went wrong
+        if: failure()
+        run: |
+          F=/tmp/gradle-report-lines.txt
+          grep -E "^(gradle log|dmesg:|WW:|EXC:)" "$F" 2>/dev/null | head -14 | \
+            while IFS= read -r line; do
+              line=$(printf '%s' "$line" | tr -d '\000-\037\177')
+              if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi
+            done
+          true
+
+      - name: Report failure - failed tasks and log tail
+        if: failure()
+        run: |
+          F=/tmp/gradle-report-lines.txt
+          grep -E "^(FAILED:|TAIL:)" "$F" 2>/dev/null | head -12 | \
+            while IFS= read -r line; do
+              line=$(printf '%s' "$line" | tr -d '\000-\037\177')
+              if [ -n "$line" ]; then printf '::error ::%s\n' "${line//::/:}"; fi
+            done
           true
 
       # The full log is the ground truth; annotations are a best-effort summary.
