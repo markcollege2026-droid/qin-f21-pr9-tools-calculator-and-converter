@@ -37,7 +37,7 @@ At the end the script prints the measured size report.
 | `aapt2` | 2.20 (build 15009934) | npm package `aaptjs3` (bundles the AOSP `aapt2` binary) |
 | `d8.jar` | 8.2.2-dev | GitHub `Promastergame/tinyapk-lab` |
 | `apksigner.jar` | 0.9 | GitHub `warren-bank/print-apk-signature` |
-| `android-36/android.jar` | API 36 platform stub (plus `android-30` for compatibility checks) | GitHub `Sable/android-platforms` |
+| `android-36/android.jar` | API 36 platform stub (compile `COMPILE_SDK`, also used by the self test) | GitHub `Sable/android-platforms` |
 
 `tools/fetch-toolchain.sh` is idempotent: every component is verified right after
 download and is only skipped when a `.done-*` marker file proves that a previous run
