@@ -76,6 +76,8 @@ PY
 }
 
 # --- component bookkeeping ----------------------------------------------------
+# Markers carry the pinned version. A tool-chain restored from a cache created with an
+# older pin therefore never satisfies the current pin: the component is re-fetched.
 is_done() { [ -f "$TC/.done-$1" ]; }
 mark() { echo "ok" > "$TC/.done-$1"; }
 
@@ -100,7 +102,7 @@ if ! is_done jdk; then
 fi
 
 # --- Kotlin compiler -----------------------------------------------------------
-if ! is_done kotlinc; then
+if ! is_done "kotlinc-$KOTLIN_NPM_VERSION"; then
   rm -rf "$TC/kotlinc"
   log "Downloading Kotlin compiler (npm kotlin-compiler@$KOTLIN_NPM_VERSION)"
   mkdir -p "$TMP"
@@ -112,11 +114,11 @@ if ! is_done kotlinc; then
   chmod +x "$TC/kotlinc/bin/"* 2>/dev/null || true
   PATH="$TC/jdk/bin:$PATH" "$TC/kotlinc/bin/kotlinc" -version >/dev/null 2>&1 \
     || fail "kotlin-compiler: kotlinc failed to run"
-  mark kotlinc
+  mark "kotlinc-$KOTLIN_NPM_VERSION"
 fi
 
 # --- aapt2 ----------------------------------------------------------------------
-if ! is_done aapt2; then
+if ! is_done "aapt2-$AAPT2_NPM_VERSION"; then
   rm -f "$TC/aapt2"
   log "Downloading aapt2 (npm aaptjs3@$AAPT2_NPM_VERSION - build-tools 2.20)"
   mkdir -p "$TMP"
@@ -127,7 +129,7 @@ if ! is_done aapt2; then
   rm -rf "$TMP/package" "$TMP"/aaptjs3-*.tgz
   chmod +x "$TC/aapt2"
   "$TC/aapt2" version >/dev/null || fail "aapt2 failed to run"
-  mark aapt2
+  mark "aapt2-$AAPT2_NPM_VERSION"
 fi
 # NOTE: the PyPI wheel "aapt2" (2.19) is deliberately not used: it rejects the resource
 # table inside android-33..36 jars with "RES_TABLE_TYPE_TYPE entry offsets overlap actual

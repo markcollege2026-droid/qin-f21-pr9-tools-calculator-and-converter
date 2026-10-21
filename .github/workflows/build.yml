@@ -33,9 +33,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: tools/toolchain
-          key: toolchain-v1-${{ hashFiles('tools/fetch-toolchain.sh') }}
+          key: toolchain-v2-${{ hashFiles('tools/fetch-toolchain.sh') }}
           restore-keys: |
-            toolchain-v1-
+            toolchain-v2-
 
       - name: Fetch offline tool-chain
         run: tools/fetch-toolchain.sh
@@ -71,7 +71,7 @@ jobs:
           if-no-files-found: error
 
   gradle-build:
-    name: Gradle build (Android SDK 30)
+    name: Gradle build (Android SDK 36)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
