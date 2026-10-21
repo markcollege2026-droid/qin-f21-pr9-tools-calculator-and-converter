@@ -39,6 +39,9 @@ class ToolboxApp : Application() {
 object Toolbox {
     val engine: ConversionEngine by lazy { ConversionEngine() }
     val store: ToolboxStore by lazy { ToolboxStore(ToolboxApp.instance) }
+    val wallet: com.qin.f21.toolbox.core.data.WalletStore by lazy {
+        com.qin.f21.toolbox.core.data.WalletStore(ToolboxApp.instance)
+    }
     val settings: Settings by lazy { Settings.get(ToolboxApp.instance) }
     var capabilities: HardwareCapabilities = HardwareCapabilities.get(ToolboxApp.instance)
         private set
@@ -55,6 +58,16 @@ object Toolbox {
 
     fun reloadCurrency() {
         currency = currency.withOverrides(settings.currencyOverrides)
+    }
+
+    /**
+     * The bundled rate table seen as the wallet's rate source, so the wallet converts with
+     * exactly the same offline rates the currency tool shows (including the overrides).
+     */
+    fun rates(): com.qin.f21.toolbox.core.wallet.RateSource = object : com.qin.f21.toolbox.core.wallet.RateSource {
+        override fun rate(code: String): Double = currency.rate(code)
+        override fun convert(amount: Double, from: String, to: String): Double =
+            currency.convert(amount, from, to)
     }
 
     fun toast(context: Context, message: String) {

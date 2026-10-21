@@ -22,6 +22,15 @@ import com.qin.f21.toolbox.core.common.Numbers
 import com.qin.f21.toolbox.core.conversion.ConversionEngine
 import com.qin.f21.toolbox.core.conversion.CurrencyTable
 import com.qin.f21.toolbox.core.conversion.UnitCatalog
+import com.qin.f21.toolbox.core.wallet.FixedRates
+import com.qin.f21.toolbox.core.wallet.Money
+import com.qin.f21.toolbox.core.wallet.RateSource
+import com.qin.f21.toolbox.core.wallet.WalletAccount
+import com.qin.f21.toolbox.core.wallet.WalletAccountKind
+import com.qin.f21.toolbox.core.wallet.WalletChange
+import com.qin.f21.toolbox.core.wallet.WalletEntryKind
+import com.qin.f21.toolbox.core.wallet.WalletErrorCode
+import com.qin.f21.toolbox.core.wallet.WalletLedger
 import java.time.LocalDate
 
 /**
@@ -47,6 +56,7 @@ object Selftest {
         calculatorTests()
         geometryTests()
         storeTests()
+        walletTests()
 
         println()
         println("checks : $checks")
@@ -76,6 +86,19 @@ object Selftest {
     }
 
     private fun checkTrue(name: String, value: Boolean) = check(name, true, value)
+
+    private fun done(name: String, change: WalletChange): WalletLedger {
+        val result = change as? WalletChange.Done
+        if (result == null) {
+            failures++
+            failuresList.add("$name: expected a recorded movement but it was refused ($change)")
+            return WalletLedger.EMPTY
+        }
+        return result.ledger
+    }
+
+    private fun failureCode(change: WalletChange): WalletErrorCode? =
+        (change as? WalletChange.Failed)?.code
 
     // ---- tests -----------------------------------------------------------------
 
@@ -297,5 +320,194 @@ object Selftest {
         check("travel.fuel", 54.11, TravelCalculator.fuelCost(450.0, 6.5, 1.85))
         // a larger pan holds the same food in a thinner layer, so it needs less time
         check("cooking.scaled", 21.4286, CookingCalculator.scaled(30.0, 20.0, 28.0))
+    }
+
+    /**
+     * The wallet: balances, movements, several cash accounts in their own currencies,
+     * the conversion a withdrawal needs, the "separate from the main balance" flag and
+     * the JSON format written to `wallet.json`.
+     */
+    private fun walletTests() {
+        // 1 USD = 3.70 ILS = 0.92 EUR, so 1 EUR = 4.0217 ILS
+        val rates: RateSource = FixedRates(mapOf("USD" to 1.0, "ILS" to 3.7, "EUR" to 0.92), "USD")
+
+        // ---- money helpers --------------------------------------------------------
+        check("money.roundUp", 10.13, Money.round(10.125))
+        check("money.roundDown", 10.12, Money.round(10.124))
+        check("money.roundNaN", 0.0, Money.round(Double.NaN))
+        check("money.parse", 12.5, Money.parse("12.504"))
+        checkTrue("money.parseEmpty", Money.parse("") == null)
+        checkTrue("money.parseWords", Money.parse("abc") == null)
+        checkTrue("money.zeroIsNoAmount", !Money.isAmount(Money.parse("0")))
+        // a movement is always positive - the direction comes from its kind - while an
+        // opening balance may still be negative (an overdraft)
+        checkTrue("money.negativeIsNoAmount", !Money.isAmount(Money.parse("-5")))
+        check("money.parseNegativeOpening", -5.0, Money.parse("-5"))
+        check("money.format", "1,250.50 ILS", Money.format(1250.5, "ILS"))
+        check("money.formatZero", "0.00", Money.format(0.0))
+        check("money.formatKeepsCents", "10.00", Money.format(10.0))
+        check("money.formatRate", "4.0217", Money.format(4.021739, "", 4))
+
+        // ---- the main balance -----------------------------------------------------
+        val main = WalletLedger.starting("Main", "ILS", opening = 1000.0, createdAt = 1L)
+        check("wallet.accountCount", 1, main.accounts.size)
+        check("wallet.mainKind", WalletAccountKind.MAIN, main.mainAccount?.kind)
+        val mainId = main.mainAccount!!.id
+        check("wallet.opening", 1000.0, main.balanceOf(mainId))
+
+        // ---- top up and expense ---------------------------------------------------
+        val topped = done("wallet.topUp", main.topUp(mainId, 250.50, "salary", 2L))
+        check("wallet.topUpBalance", 1250.5, topped.balanceOf(mainId))
+        val spent = done("wallet.expense", topped.expense(mainId, 100.25, "groceries", 3L))
+        check("wallet.expenseBalance", 1150.25, spent.balanceOf(mainId))
+        check("wallet.entryCount", 2, spent.entries.size)
+        check(
+            "wallet.expenseRefused",
+            WalletErrorCode.INSUFFICIENT,
+            failureCode(spent.expense(mainId, 5000.0, "", 4L))
+        )
+        check("wallet.expenseZero", WalletErrorCode.AMOUNT, failureCode(spent.expense(mainId, 0.0, "", 5L)))
+        check(
+            "wallet.topUpUnknown",
+            WalletErrorCode.ACCOUNT,
+            failureCode(spent.topUp("nope", 10.0, "", 6L))
+        )
+        check("wallet.unknownBalance", 0.0, spent.balanceOf("nope"))
+
+        // ---- several cash accounts, each in its own currency ----------------------
+        val cashEur = WalletAccount(name = "Holiday", currency = "EUR", createdAt = 10L)
+        val cashUsd = WalletAccount(
+            name = "Trip",
+            currency = "USD",
+            includedInTotal = false,
+            createdAt = 11L
+        )
+        val withCash = spent.withAccount(cashEur).withAccount(cashUsd)
+        check("wallet.cashCount", 2, withCash.cashAccounts.size)
+        check("wallet.cashCurrency", "EUR", withCash.account(cashEur.id)?.currency)
+        checkTrue("wallet.cashCurrencyDiffers", withCash.account(cashEur.id)?.currency != withCash.mainAccount?.currency)
+
+        // ---- withdrawal converts into the main currency ---------------------------
+        val withdrawChange = withCash.withdraw(cashEur.id, 10.0, "airport", 12L, rates)
+        val withdrawn = done("wallet.withdraw", withdrawChange)
+        val withdrawEntry = (withdrawChange as? WalletChange.Done)?.entry
+        check("wallet.withdrawCash", 10.0, withdrawn.balanceOf(cashEur.id))
+        // 10 EUR = 10 / 0.92 * 3.70 = 40.22 ILS leave the main balance
+        check("wallet.withdrawDebit", 40.22, withdrawEntry?.counterAmount)
+        check("wallet.withdrawMainBalance", 1110.03, withdrawn.balanceOf(mainId))
+        check("wallet.withdrawRate", 4.0217, withdrawEntry?.rate)
+        check("wallet.withdrawKind", WalletEntryKind.WITHDRAW, withdrawEntry?.kind)
+        check("wallet.withdrawNote", "airport", withdrawEntry?.note)
+        check("wallet.withdrawCost", 40.22, withCash.withdrawalCost(cashEur.id, 10.0, rates))
+        check("wallet.withdrawRateLine", 4.0217, withCash.withdrawalRate(cashEur.id, rates))
+
+        // a pocket in the currency of the main balance needs no conversion
+        val cashIls = WalletAccount(name = "Pocket", currency = "ILS", createdAt = 13L)
+        val plainChange = withdrawn.withAccount(cashIls).withdraw(cashIls.id, 50.0, "", 14L, rates)
+        val plain = done("wallet.withdrawSameCurrency", plainChange)
+        check("wallet.plainDebit", 50.0, (plainChange as? WalletChange.Done)?.entry?.counterAmount)
+        check("wallet.plainRate", 1.0, (plainChange as? WalletChange.Done)?.entry?.rate)
+        check("wallet.plainMain", 1060.03, plain.balanceOf(mainId))
+        check("wallet.plainCash", 50.0, plain.balanceOf(cashIls.id))
+
+        // refused withdrawals
+        check(
+            "wallet.withdrawTooBig",
+            WalletErrorCode.INSUFFICIENT,
+            failureCode(withdrawn.withdraw(cashEur.id, 100000.0, "", 15L, rates))
+        )
+        check(
+            "wallet.withdrawUnknownAccount",
+            WalletErrorCode.ACCOUNT,
+            failureCode(withdrawn.withdraw("nope", 5.0, "", 16L, rates))
+        )
+        check(
+            "wallet.withdrawIntoMain",
+            WalletErrorCode.ACCOUNT,
+            failureCode(withdrawn.withdraw(mainId, 5.0, "", 17L, rates))
+        )
+        check(
+            "wallet.withdrawNoMain",
+            WalletErrorCode.NO_MAIN,
+            failureCode(WalletLedger(listOf(cashEur), emptyList()).withdraw(cashEur.id, 5.0, "", 18L, rates))
+        )
+        check(
+            "wallet.withdrawZero",
+            WalletErrorCode.AMOUNT,
+            failureCode(withdrawn.withdraw(cashEur.id, 0.0, "", 19L, rates))
+        )
+        check(
+            "wallet.withdrawNegative",
+            WalletErrorCode.AMOUNT,
+            failureCode(withdrawn.withdraw(cashEur.id, -5.0, "", 20L, rates))
+        )
+
+        // ---- cash pockets take money in and pay things out too --------------------
+        val pocketTopped = done("wallet.cashTopUp", withdrawn.topUp(cashEur.id, 20.0, "gift", 21L))
+        check("wallet.cashTopUpBalance", 30.0, pocketTopped.balanceOf(cashEur.id))
+        val pocketSpent = done("wallet.cashExpense", pocketTopped.expense(cashEur.id, 5.5, "coffee", 22L))
+        check("wallet.cashExpenseBalance", 24.5, pocketSpent.balanceOf(cashEur.id))
+
+        // ---- the combined total and the "separate" flag ---------------------------
+        check("wallet.totalIncludesCash", 1150.25, withdrawn.totalIn("ILS", rates))
+        check("wallet.valueOfMain", 300.01, withdrawn.valueOf(mainId, "USD", rates))
+        val separated = withdrawn.withAccount(cashEur.copy(includedInTotal = false))
+        check("wallet.totalExcludesSeparate", 1110.03, separated.totalIn("ILS", rates))
+        check("wallet.separateCount", 2, separated.separateAccounts().size)
+        check("wallet.includedCount", 1, separated.includedAccounts().size)
+        check("wallet.separateBalanceKept", 10.0, separated.balanceOf(cashEur.id))
+        val included = separated.withAccount(cashEur.copy(includedInTotal = true))
+        check("wallet.includeAgain", 1150.25, included.totalIn("ILS", rates))
+
+        // ---- removing the entry undoes the movement -------------------------------
+        val withoutWithdraw = WalletLedger(
+            withdrawn.accounts,
+            withdrawn.entries.filter { it.kind != WalletEntryKind.WITHDRAW }
+        )
+        check("wallet.undoMain", 1150.25, withoutWithdraw.balanceOf(mainId))
+        check("wallet.undoCash", 0.0, withoutWithdraw.balanceOf(cashEur.id))
+
+        // ---- account removal rules -------------------------------------------------
+        checkTrue("wallet.mainNotRemovable", !withdrawn.canRemove(mainId))
+        checkTrue("wallet.usedNotRemovable", !withdrawn.canRemove(cashEur.id))
+        checkTrue("wallet.emptyRemovable", withdrawn.canRemove(cashUsd.id))
+        check("wallet.removeEmpty", null, withdrawn.removeAccount(cashUsd.id).account(cashUsd.id))
+        check(
+            "wallet.removeMainNoop",
+            withdrawn.accounts.size,
+            withdrawn.removeAccount(mainId).accounts.size
+        )
+        check(
+            "wallet.removeUsedNoop",
+            withdrawn.accounts.size,
+            withdrawn.removeAccount(cashEur.id).accounts.size
+        )
+
+        // ---- the persisted document -------------------------------------------------
+        val restored = WalletLedger.fromJson(withdrawn.toJson())
+        check("wallet.jsonAccounts", withdrawn.accounts.size, restored.accounts.size)
+        check("wallet.jsonEntries", withdrawn.entries.size, restored.entries.size)
+        check("wallet.jsonMainBalance", withdrawn.balanceOf(mainId), restored.balanceOf(mainId))
+        check("wallet.jsonCashBalance", withdrawn.balanceOf(cashEur.id), restored.balanceOf(cashEur.id))
+        check("wallet.jsonCurrency", "EUR", restored.account(cashEur.id)?.currency)
+        check("wallet.jsonSeparateFlag", false, restored.account(cashUsd.id)?.includedInTotal)
+        check("wallet.jsonMainFlag", true, restored.account(mainId)?.includedInTotal)
+        check(
+            "wallet.jsonStillUsable",
+            true,
+            restored.withdraw(cashEur.id, 1.0, "", 30L, rates) is WalletChange.Done
+        )
+
+        // the same document after it went through the writer and the parser
+        val reloaded = WalletLedger.fromJson(
+            JsonParser.parse(JsonWriter.write(withdrawn.toJson(), pretty = true))
+        )
+        check("wallet.textRoundTripMain", withdrawn.balanceOf(mainId), reloaded.balanceOf(mainId))
+        check("wallet.textRoundTripCash", withdrawn.balanceOf(cashEur.id), reloaded.balanceOf(cashEur.id))
+        val recorded = reloaded.entries.first { it.kind == WalletEntryKind.WITHDRAW }
+        check("wallet.textRoundTripNote", "airport", recorded.note)
+        check("wallet.textRoundTripCounter", 40.22, recorded.counterAmount)
+        check("wallet.textRoundTripRate", 4.0217, recorded.rate)
+        check("wallet.entriesNewestFirst", true, reloaded.entries.first().timestamp >= reloaded.entries.last().timestamp)
     }
 }

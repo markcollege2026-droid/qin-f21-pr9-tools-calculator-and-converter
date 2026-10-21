@@ -228,14 +228,24 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
             } ?: ""
             val json = JsonParser.parse(text)
             val result = Toolbox.store.importDocument(json, merge = true)
+            // a backup may hold a wallet and no history, so the two are read independently
+            val walletImported = Toolbox.wallet.importDocument(json)
             val error = result.error
-            if (error != null) {
+            if (error != null && !walletImported) {
                 host.showMessage(error)
             } else {
                 host.showMessage(
-                    host.activity.getString(
-                        R.string.settings_imported, result.historyAdded, result.favoritesAdded
-                    )
+                    if (walletImported) {
+                        host.activity.getString(
+                            R.string.settings_imported_with_wallet,
+                            result.historyAdded,
+                            result.favoritesAdded
+                        )
+                    } else {
+                        host.activity.getString(
+                            R.string.settings_imported, result.historyAdded, result.favoritesAdded
+                        )
+                    }
                 )
                 refresh()
             }

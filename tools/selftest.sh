@@ -29,6 +29,7 @@ find "$ROOT/core/common/src/main/kotlin" \
      "$ROOT/core/conversion/src/main/kotlin" \
      "$ROOT/core/calc/src/main/kotlin" \
      "$ROOT/core/data/src/main/kotlin" \
+     "$ROOT/core/wallet/src/main/kotlin" \
      "$ROOT/tools/selftest" -name "*.kt" > "$OUT/sources.txt"
 
 # core/data is compiled against the platform stubs, only the pure parts are executed

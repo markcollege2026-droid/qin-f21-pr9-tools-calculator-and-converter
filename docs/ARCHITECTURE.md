@@ -5,15 +5,17 @@
 │ MainActivity (single activity)                                    │
 │   └── screen stack: HomeScreen → ConverterScreen → …               │
 │         Screen base class + Widgets helpers + KeypadView           │
-│         Tools registry (21 tools, capability gating)               │
+│         Tools registry (22 tools, capability gating)               │
 │         CameraActivity (Camera2 preview, scan + photo)             │
 └────────────────────────────────────────────────────────────────────┘
              │                    │                    │
       core/common          core/conversion        core/calc
       JSON, numbers         units + engine         expression, helpers
              │                    │                    │
+             │                 core/wallet                │
+             │           balances, cash accounts          │
              └──────────── core/data ────────────────┘
-              store, settings, file provider
+              store, settings, wallet store, file provider
                         │
                    core/hardware
      capabilities, torch, IR, GNSS, mic, diagnostics
@@ -63,6 +65,14 @@ been a large and error-prone piece of code, so the Apache-2.0 licensed ZXing *co
 vendored in `third_party/zxing-core` and compiled from source. It keeps the build
 offline and the licence simple, and it adds roughly 1 MB to the compressed APK.
 
+**Balances are replayed, never stored.** The wallet (`core/wallet`) keeps the accounts
+and the recorded movements; every balance is the opening amount plus the movements that
+touch the account. There is no stored figure that could drift away from the history, and
+deleting a movement restores the balance exactly. `core/wallet` is a pure module like
+`core/common` and `core/calc`, so the money logic (the conversion of a withdrawal, the
+"separate from the main balance" flag, the JSON document) runs in `tools/selftest.sh`
+without a device.
+
 **No `INTERNET` permission.** This is the strongest possible offline guarantee: the
 process cannot open a socket.
 
@@ -72,11 +82,15 @@ process cannot open a socket.
   atomically (temp file + rename). One entry per conversion, not one per key press.
 * **Favourites** – `favorites.json`, the same mechanism. A favourite is a tool id plus
   a payload (for example a converter pair).
+* **Wallet** – `wallet.json`, the same atomic mechanism: the accounts (one main balance
+  plus any number of cash accounts, each with its own currency and its "count in the
+  total" flag) and the movements, at most 500 of them. A withdrawal stores both sides and
+  the rate that was used, so the entry stays readable after the rates changed.
 * **Settings** – `SharedPreferences` (`qin_f21_toolbox_settings`): keep screen on,
   microphone calibration, currency overrides, the last used unit per category, the
   recently used tools.
-* **Export / import** – a JSON document with the `history` and `favorites` arrays, or
-  the same history as CSV. The files are shared through
+* **Export / import** – a JSON document with the `history` and `favorites` arrays and
+  the `wallet` object, or the same history as CSV. The files are shared through
   `com.qin.f21.toolbox.core.data.ToolboxFileProvider`, a minimal `ContentProvider`
   that replaces the AndroidX `FileProvider`.
 

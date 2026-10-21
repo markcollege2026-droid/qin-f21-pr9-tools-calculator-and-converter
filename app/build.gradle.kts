@@ -58,5 +58,6 @@ dependencies {
     implementation(project(":core:calc"))
     implementation(project(":core:hardware"))
     implementation(project(":core:data"))
+    implementation(project(":core:wallet"))
     implementation(project(":core:design"))
 }

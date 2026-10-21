@@ -76,7 +76,7 @@ with two jobs:
 * **Offline pipeline** –
   1. `tools/fetch-toolchain.sh`: pinned, verified tool-chain (cached with
      `actions/cache` keyed on the fetch script);
-  2. `tools/selftest.sh`: the 183 pure-Kotlin checks;
+  2. `tools/selftest.sh`: the 258 pure-Kotlin checks;
   3. `tools/build-offline.sh`: the signed APK;
   4. `apksigner verify` on the artefact, then the APK is uploaded as a build artefact.
 
