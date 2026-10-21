@@ -21,10 +21,10 @@ tools/build-offline.sh       # builds and signs the APK
 | 1 | `aapt2 compile --dir` | flat resource files per module (`core/*/src/main/res`, `app/src/main/res`) |
 | 2 | `aapt2 link` | `build/apk/base.apk` + the generated `R.java` in `build/gen` |
 | 3 | `javac` (JDK 11) | `R.java` **and** the vendored ZXing sources → `build/rclasses` |
-| 4 | `kotlinc` (2.4.21, `-jvm-target 1.8`) | all Kotlin sources → `build/classes` |
+| 4 | `kotlinc` (1.9.25, `-jvm-target 1.8`) | all Kotlin sources → `build/classes` |
 | 5 | `d8` (`--min-api 30 --release`) | `build/dex/classes.dex` |
 | 6 | `tools/package_apk.py` | `build/apk/unsigned.apk` (base.apk + dex + assets) |
-| 7 | `keytool` + `apksigner` | signed `build/outputs/qin-f21-toolbox-1.0.0.apk` (v1+v2+v3) |
+| 7 | `keytool` + `apksigner` | signed `build/outputs/qin-f21-toolbox-1.1.0-release.apk` (APK Signature Scheme v3) |
 
 At the end the script prints the measured size report.
 
@@ -33,11 +33,11 @@ At the end the script prints the measured size report.
 | File | Version | Origin |
 |------|---------|--------|
 | `jdk/` | AdoptOpenJDK 11.0.10 (`javac`, `keytool`, `jar`) | npm package `jdk11@2.0.0` |
-| `kotlinc/` | Kotlin compiler 2.4.21 + stdlib | npm package `kotlin-compiler` |
-| `aapt2` | 2.19 (build 7832930) | PyPI package `aapt2` |
+| `kotlinc/` | Kotlin compiler 1.9.25 + stdlib | npm package `kotlin-compiler` |
+| `aapt2` | 2.20 (build 15009934) | npm package `aaptjs3` (bundles the AOSP `aapt2` binary) |
 | `d8.jar` | 8.2.2-dev | GitHub `Promastergame/tinyapk-lab` |
 | `apksigner.jar` | 0.9 | GitHub `warren-bank/print-apk-signature` |
-| `android-30/android.jar` | API 30 platform stub | GitHub `Sable/android-platforms` |
+| `android-36/android.jar` | API 36 platform stub (plus `android-30` for compatibility checks) | GitHub `Sable/android-platforms` |
 
 `tools/fetch-toolchain.sh` is idempotent: every component is verified right after
 download and is only skipped when a `.done-*` marker file proves that a previous run
@@ -54,9 +54,17 @@ reproducible.
   A `javac` failure aborts the build (the compiler output is printed); an earlier
   revision of the script swallowed compiler errors, which turned a broken `R.java` into a
   confusing Kotlin compile failure.
-* The Kotlin flag is `-jvm-default=enable`: the old `-Xjvm-default=all` mode was removed
-  in Kotlin 2.2, and the tool-chain is pinned to 2.4.21. The code base contains no
-  `@JvmDefault` annotation, so `enable` produces the same bytecode as the old `all`.
+* The compiler versions are pinned together on purpose: **Kotlin 1.9.25** is the newest
+  compiler whose metadata the bundled R8/d8 8.2.2 understands, and it matches the Kotlin
+  version Gradle uses. `-jvm-default=enable` is a Kotlin 2.x flag and must not come back.
+* `kotlinc` needs an explicit heap on small machines: the build passes
+  `-J-Xmx1536m -J-XX:MaxMetaspaceSize=512m -J-XX:+UseSerialGC` (override with
+  `KOTLIN_HEAP=...`). Without it a 4 GB sandbox fails with `OutOfMemoryError`.
+* `aapt2` must be **2.20 or newer** for `compileSdk 36`; the 2.19 build (PyPI wheel)
+  aborts on modern resource tables with `RES_TABLE_TYPE_TYPE entry offsets overlap`.
+* The signing key lives in `.release-keystore/release.keystore` (gitignored), *outside*
+  `build/`, which is wiped on every run. Replacing it means a new signing identity, and
+  an APK signed with a different key cannot be installed as an update.
 * The JDK from the `jdk11` npm package is a full JDK (it ships `javac`, `jar` and
   `keytool`); a bare JRE is not enough for this pipeline.
 * `apksigner` needs an existing `build/outputs` directory.
@@ -81,7 +89,7 @@ with two jobs:
   4. `apksigner verify` on the artefact, then the APK is uploaded as a build artefact.
 
 * **Gradle build** –
-  1. JDK 17 (Temurin) and the Android SDK (platform 30 + build-tools 33.0.1) via
+  1. JDK 17 (Temurin) and the Android SDK (platform 36 + build-tools 35.0.0) via
      `setup-java` / `setup-android`;
   2. `./gradlew :app:lintRelease :app:assembleDebug :app:assembleRelease` (the wrapper
      and the Gradle dependency cache are maintained by `gradle/actions/setup-gradle`).
@@ -91,15 +99,20 @@ with two jobs:
      full report is produced and the fatal findings are surfaced as annotations;
   3. the debug and release APKs are uploaded as build artefacts.
 
-### Debug key
+### Keys
 
-The script creates `build/debug.keystore` on first use
-(`CN=Qin F21 Toolbox Debug, O=Offline, C=IL`, password `android`). Replace it with your
-own key before distributing the app.
+`tools/build-offline.sh` builds and signs a **release** APK by default and creates the key
+at `.release-keystore/release.keystore` (gitignored, kept outside `build/` because that
+directory is wiped on every run). Reuse that file to ship updates; an APK signed with a
+different key cannot be installed over the existing app.
+
+`BUILD_TYPE=debug tools/build-offline.sh` produces a debuggable APK signed with
+`build/debug.keystore` (`CN=Qin F21 Toolbox Debug`, password `android`) - for development
+only, never for distribution.
 
 ---
 
-## 2. Gradle build (needs a local Android SDK with platform 30)
+## 2. Gradle build (needs a local Android SDK with platform 36 and build-tools 35.0.0)
 
 ```bash
 ./gradlew :app:assembleDebug      # debug APK
@@ -107,8 +120,9 @@ own key before distributing the app.
 ./gradlew :app:installDebug       # install on a connected device
 ```
 
-* AGP 7.4.2, Kotlin 1.8.22, Gradle 7.6.2 (wrapper committed in `gradle/wrapper`),
-  `compileSdk = 30`, `minSdk = 30`, `targetSdk = 30`, built on JDK 17.
+* AGP 8.5.2, Kotlin 1.9.25, Gradle 8.9 (wrapper committed in `gradle/wrapper`),
+  `compileSdk = 36`, `minSdk = 30` (Android 11), `targetSdk = 36` (Android 16), built on
+  JDK 17. `minSdk 30` is a hard floor: Android 11+ only, by design.
 * `android.useAndroidX=false` – the app uses the plain platform framework, there is no
   AndroidX or Material dependency.
 * The ZXing core is compiled from source (`third_party/zxing-core`) by the pure-Java
@@ -120,7 +134,7 @@ own key before distributing the app.
   configured on purpose); sign it with your own key before distributing.
 
 The Gradle build runs in CI (see above) with the Android SDK; it also works in any
-standard development environment with a local SDK (platform 30) and JDK 17.
+standard development environment with a local SDK (platform 36, build-tools 35.0.0) and JDK 17.
 
 ---
 

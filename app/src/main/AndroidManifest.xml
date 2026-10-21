@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.qin.f21.toolbox"
-    android:versionCode="1"
-    android:versionName="1.0.0">
+    android:versionCode="2"
+    android:versionName="1.1.0">
 
     <!--
         The toolbox is completely offline. No INTERNET permission is declared, so the
@@ -32,12 +32,22 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
 
-    <!-- Kept even though the Gradle build script also sets these values: the
-         offline pipeline (tools/build-offline.sh) links the manifest as-is, so it
-         is the only SDK declaration that APK carries. -->
+    <!--
+        minSdk 30 = Android 11, the oldest release the app supports and the OS of the
+        target device. targetSdk 36 = Android 16, which is what current Android releases
+        and Google Play require; the runtime behaviours that target 31..36 switch on are
+        implemented explicitly:
+          33  POST_NOTIFICATIONS      - requested from the timer, degrades to vibration
+          33  predictive back         - OnBackInvokedCallback, see MainActivity
+          35  edge-to-edge enforcement - insets applied in MainActivity, not left to the
+                                        framework default
+        Kept even though the Gradle build script also sets these values: the offline
+        pipeline (tools/build-offline.sh) links the manifest as-is, so this is the only
+        SDK declaration that APK carries.
+    -->
     <uses-sdk
         android:minSdkVersion="30"
-        android:targetSdkVersion="30"
+        android:targetSdkVersion="36"
         tools:ignore="GradleOverrides" />
 
     <application
@@ -49,6 +59,7 @@
         android:supportsRtl="false"
         android:hardwareAccelerated="true"
         android:theme="@style/AppTheme"
+        android:enableOnBackInvokedCallback="true"
         android:installLocation="internalOnly"
         android:usesCleartextTraffic="false"
         android:networkSecurityConfig="@xml/network_security_config">

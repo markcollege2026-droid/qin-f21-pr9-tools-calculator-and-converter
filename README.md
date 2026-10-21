@@ -7,7 +7,11 @@ Android 11 / API 30). The app contains 21 tools in five categories, uses no thir
 runtime dependency, has **no `INTERNET` permission** and never contacts a server.
 
 **Requires Android 11 (API 30) or newer** – that is also the operating system of the
-target device, so nothing below Android 11 is supported or tested.
+target device, so nothing below Android 11 is supported or tested. The app targets
+**API 36 (Android 16)**, the current Play Store requirement, by setting minSdk 30 /
+compileSdk 36 / targetSdk 36, and implements the runtime behaviour changes that come with
+targeting 31–36 (edge-to-edge insets, predictive back, runtime notification permission,
+explicit component exports).
 
 ```
 Convert   Unit converter · Currency · Time zones · Date & time
@@ -150,9 +154,17 @@ tools/fetch-toolchain.sh     # one time: JDK 11, kotlinc, aapt2, d8, apksigner
 tools/build-offline.sh       # aapt2 -> javac -> kotlinc -> d8 -> package -> sign
 ```
 
-The signed debug APK is written to `build/outputs/qin-f21-toolbox-1.0.0.apk`.
+The **signed release APK** is written to
+`build/outputs/qin-f21-toolbox-1.1.0-release.apk` (a debug variant, signed with a debug
+key, is produced by `BUILD_TYPE=debug tools/build-offline.sh`). Install it with
+`adb install -r build/outputs/qin-f21-toolbox-1.1.0-release.apk`.
 
-### 2. Gradle (needs a local Android SDK with platform 30)
+The signing key is generated on the first build at `.release-keystore/release.keystore`
+(gitignored). Keep that file: Android only installs an update over an existing app when
+the new APK is signed with the same key. Pass `RELEASE_KEYSTORE=/path/to/key.jks` (plus
+`RELEASE_KEY_ALIAS`, `RELEASE_STORE_PASS`, `RELEASE_KEY_PASS`) to sign with your own.
+
+### 2. Gradle (needs a local Android SDK with platform 36 and build-tools 35.0.0)
 
 ```bash
 ./gradlew :app:assembleRelease
@@ -176,11 +188,11 @@ still unverified.
 
 | Item | Size |
 |------|------|
-| Signed APK | **1.11 MiB** (1,161,286 bytes) |
-| `classes.dex` | 3.04 MB (1.02 MB compressed inside the APK) |
-| Compiled resources | 34.5 KB |
+| Signed APK | **1.05 MiB** (1,096,218 bytes, release, APK Signature Scheme v3) |
+| `classes.dex` | 2.78 MB |
+| Compiled resources | 31.9 KB |
 | Bundled assets (rates, IR codes) | 1.1 KB |
-| Uncompressed payload | 3.18 MB |
+| Uncompressed payload | 2.92 MB |
 
 The installed size is therefore around 4–5 MB (APK + extracted dex/resources), well
 below the 35 MB target. The number above is measured from the signed artefact with

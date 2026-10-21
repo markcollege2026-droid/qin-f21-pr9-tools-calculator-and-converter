@@ -122,6 +122,8 @@
     <string name="timer_remaining">Remaining</string>
     <string name="timer_set_duration">Set a duration first.</string>
     <string name="timer_channel">Timer alerts</string>
+    <string name="timer_channel_description">Vibration and a notification when a countdown ends.</string>
+    <string name="timer_notifications_blocked">Notifications are not allowed, so the timer will only vibrate.</string>
     <string name="timer_notification_title">Timer finished</string>
     <string name="timer_notification_text">The countdown has ended.</string>
 

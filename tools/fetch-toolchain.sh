@@ -9,11 +9,16 @@
 #
 #   * JDK 11           - npm package "jdk11" (AdoptOpenJDK 11.0.10, full JDK:
 #                        java, javac, jar, keytool)
-#   * Kotlin compiler  - npm package "kotlin-compiler"
-#   * aapt2            - PyPI wheel "aapt2" (Linux binary)
-#   * d8 (dexer)       - GitHub mirror of the Android build-tools d8.jar
+#   * Kotlin compiler  - npm package "kotlin-compiler" (1.9.25, the same line the
+#                        Gradle build uses, and old enough for the pinned R8 8.2.2 to
+#                        read its metadata)
+#   * aapt2            - npm package "aaptjs3" (build-tools 2.20, Linux binary).
+#                        The 2.19 binary that PyPI ships cannot read the resource table
+#                        of the API 33+ platform jars, and compiling against a modern
+#                        platform needs the newer binary.
+#   * d8 (dexer)       - GitHub mirror of the Android build-tools d8.jar (also ships R8)
 #   * apksigner        - GitHub mirror of the Android build-tools apksigner.jar
-#   * android.jar      - GitHub mirror of the API 30 platform (Android 11)
+#   * android.jar      - GitHub mirror of the API 36 platform (Android 16)
 #
 # Every version is pinned so the build is reproducible. Each component is
 # verified right after download and only skipped when a ".done-*" marker
@@ -40,8 +45,11 @@ D8_REPO="Promastergame/tinyapk-lab"
 D8_BLOB="e169b926a8ad7f8418a2c8b2ec4101ae156976bd"            # tools/windows/d8.jar, D8 8.2.2-dev
 APKSIGNER_REPO="warren-bank/print-apk-signature"
 APKSIGNER_BLOB="5b38de849a1c655bb4c776ec1c1a9e5f4ea3f8f7"     # libs/apksigner/apksigner.jar, v0.9
+AAPT2_NPM_VERSION="2.0.2"                                   # npm aaptjs3, build-tools 2.20
+KOTLIN_NPM_VERSION="1.9.25"                                 # same line as the Gradle build
 ANDROID_REPO="Sable/android-platforms"
-ANDROID_BLOB="4d76f1707c0640ff5119af5570619d601779a866"       # android-30/android.jar, API 30
+ANDROID_API="36"
+ANDROID_BLOB="e560471790469782b41614eac5f290f5388d0d79"       # android-36/android.jar, API 36
 
 # Fetch one file from a public GitHub repository by its blob sha.
 # Tries the authenticated "gh" CLI first (higher rate limits), then falls
@@ -94,10 +102,11 @@ fi
 # --- Kotlin compiler -----------------------------------------------------------
 if ! is_done kotlinc; then
   rm -rf "$TC/kotlinc"
-  log "Downloading Kotlin compiler (npm kotlin-compiler@2.4.21)"
+  log "Downloading Kotlin compiler (npm kotlin-compiler@$KOTLIN_NPM_VERSION)"
   mkdir -p "$TMP"
-  (cd "$TMP" && npm pack kotlin-compiler@2.4.21 >/dev/null 2>&1) || fail "npm pack kotlin-compiler@2.4.21 failed"
-  tar xzf "$TMP/kotlin-compiler-2.4.21.tgz" -C "$TMP"
+  (cd "$TMP" && npm pack "kotlin-compiler@$KOTLIN_NPM_VERSION" >/dev/null 2>&1) \
+    || fail "npm pack kotlin-compiler@$KOTLIN_NPM_VERSION failed"
+  tar xzf "$TMP/kotlin-compiler-$KOTLIN_NPM_VERSION.tgz" -C "$TMP"
   mv "$TMP/package" "$TC/kotlinc"
   rm -f "$TMP"/kotlin-compiler-*.tgz
   chmod +x "$TC/kotlinc/bin/"* 2>/dev/null || true
@@ -109,21 +118,20 @@ fi
 # --- aapt2 ----------------------------------------------------------------------
 if ! is_done aapt2; then
   rm -f "$TC/aapt2"
-  log "Downloading aapt2 (PyPI aapt2==0.2.1)"
+  log "Downloading aapt2 (npm aaptjs3@$AAPT2_NPM_VERSION - build-tools 2.20)"
   mkdir -p "$TMP"
-  python3 -m pip download aapt2==0.2.1 --no-deps -d "$TMP" >/dev/null \
-    || fail "pip download aapt2==0.2.1 failed"
-  python3 - "$TMP" "$TC" <<'PY'
-import glob, os, sys, zipfile
-wheel = sorted(glob.glob(os.path.join(sys.argv[1], "aapt2-*.whl")))[0]
-with zipfile.ZipFile(wheel) as z:
-    with z.open("aapt2/bin/Linux/aapt2") as src, open(os.path.join(sys.argv[2], "aapt2"), "wb") as dst:
-        dst.write(src.read())
-PY
+  (cd "$TMP" && npm pack "aaptjs3@$AAPT2_NPM_VERSION" >/dev/null 2>&1) \
+    || fail "npm pack aaptjs3@$AAPT2_NPM_VERSION failed"
+  tar xzf "$TMP/aaptjs3-$AAPT2_NPM_VERSION.tgz" -C "$TMP"
+  cp "$TMP/package/bin/x64/linux/aapt2" "$TC/aapt2"
+  rm -rf "$TMP/package" "$TMP"/aaptjs3-*.tgz
   chmod +x "$TC/aapt2"
   "$TC/aapt2" version >/dev/null || fail "aapt2 failed to run"
   mark aapt2
 fi
+# NOTE: the PyPI wheel "aapt2" (2.19) is deliberately not used: it rejects the resource
+# table inside android-33..36 jars with "RES_TABLE_TYPE_TYPE entry offsets overlap actual
+# entry data", so a COMPILE_SDK above 32 cannot be built with it.
 
 # --- d8 + apksigner (pinned GitHub mirrors) ------------------------------------
 if ! is_done d8; then
@@ -143,15 +151,17 @@ if ! is_done apksigner; then
   mark apksigner
 fi
 
-# --- android.jar (API 30 = Android 11, pinned GitHub mirror) -------------------
-if ! is_done android; then
-  log "Downloading android.jar for API 30 (Android 11, pinned blob)"
-  mkdir -p "$TC/android-30"
-  fetch_github_blob "$ANDROID_REPO" "$ANDROID_BLOB" "$TC/android-30/android.jar" \
-    || fail "could not fetch android-30/android.jar"
-  [ "$(wc -c < "$TC/android-30/android.jar")" -gt 10000000 ] \
+# --- android.jar (pinned GitHub mirror) ----------------------------------------
+# The compile platform. Kept in step with COMPILE_SDK in tools/build-offline.sh: the app
+# targets API 36 (Android 16) and still runs on API 30 (Android 11).
+if ! is_done "android-$ANDROID_API"; then
+  log "Downloading android.jar for API $ANDROID_API (pinned blob)"
+  mkdir -p "$TC/android-$ANDROID_API"
+  fetch_github_blob "$ANDROID_REPO" "$ANDROID_BLOB" "$TC/android-$ANDROID_API/android.jar" \
+    || fail "could not fetch android-$ANDROID_API/android.jar"
+  [ "$(wc -c < "$TC/android-$ANDROID_API/android.jar")" -gt 10000000 ] \
     || fail "android.jar looks truncated"
-  mark android
+  mark "android-$ANDROID_API"
 fi
 
 rm -rf "$TMP"

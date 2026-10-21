@@ -1,10 +1,13 @@
 package com.qin.f21.toolbox
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -197,9 +200,46 @@ object CountdownAlarm {
     private const val CHANNEL_ID = "timer"
     private const val NOTIFICATION_ID = 42
 
+    /**
+     * Creates the notification channel.
+     *
+     * Required since Android 8, and on Android 13+ a POST_NOTIFICATIONS prompt is
+     * pointless before the channel exists, so this runs once from `ToolboxApp.onCreate`.
+     */
+    fun ensureChannel(context: Context) {
+        val app = context.applicationContext
+        val manager = app.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            ?: return
+        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_ID,
+                app.getString(R.string.timer_channel),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = app.getString(R.string.timer_channel_description)
+                enableVibration(true)
+            }
+        )
+    }
+
+    /**
+     * True when the alarm is allowed to post a notification.
+     *
+     * Android 13 (API 33) introduced the POST_NOTIFICATIONS runtime permission. When it is
+     * not granted the countdown still completes and still vibrates - the notification is
+     * simply skipped instead of throwing.
+     */
+    fun canNotify(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        return context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+    }
+
     fun fire(context: Context, channelName: String, title: String, text: String) {
         val app = context.applicationContext
         Toolbox.capabilities.vibrate(600)
+        if (!canNotify(app)) return
         try {
             val manager = app.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                 ?: return

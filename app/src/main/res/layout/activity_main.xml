@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  App shell.
+  App shell. The window insets are applied to @id/root in MainActivity.applyWindowInsets(),
+  which is what keeps the content off the system bars on Android 15+ where every window is
+  drawn edge to edge; do not add fitsSystemWindows here or the padding is applied twice.
 
   The bar is deliberately quiet: no elevation, no filled accent, just the screen name and
   a one-line context note over a hairline. On a 4:3 display every vertical pixel spent on
@@ -11,8 +13,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg"
-    android:fitsSystemWindows="true">
+    android:background="@color/bg">
 
     <!-- App bar -->
     <LinearLayout
