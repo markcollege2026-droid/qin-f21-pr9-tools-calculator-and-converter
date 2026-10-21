@@ -21,3 +21,6 @@ tools/.toolchain/
 # Signing material
 *.keystore
 *.jks
+
+# Local build artefacts handed to the user (not part of the source)
+artifacts/

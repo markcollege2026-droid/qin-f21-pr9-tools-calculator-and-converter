@@ -93,9 +93,12 @@ with two jobs:
 
 ### Debug key
 
-The script creates `build/debug.keystore` on first use
-(`CN=Qin F21 Toolbox Debug, O=Offline, C=IL`, password `android`). Replace it with your
-own key before distributing the app.
+The script creates `tools/.keystore/debug.keystore` on first use
+(`CN=Qin F21 Toolbox Debug, O=Offline, C=IL`, password `android`), or uses the file in
+`$KEYSTORE_FILE` when that variable is set. It is deliberately kept **outside** `build/`:
+that directory is wiped by every build, and a key regenerated on each run would make the
+next APK impossible to install over the previous one (Android refuses an upgrade whose
+signature differs). Replace it with your own key before distributing the app.
 
 ---
 
