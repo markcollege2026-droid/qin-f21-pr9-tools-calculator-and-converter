@@ -111,14 +111,16 @@ class WalletAccountScreen(
         ))
 
         val isMain = account?.kind == WalletAccountKind.MAIN
-        val hasEntries = account != null && ledger.entriesFor(account.id).isNotEmpty()
-        if (hasEntries) {
+        // `account` is nullable and the null check is folded into this count, so the
+        // compiler would not smart cast it below - the safe call keeps it explicit
+        val entryCount = account?.let { ledger.entriesFor(it.id).size } ?: 0
+        if (entryCount > 0) {
             // the recorded amounts are stored in the currency of the account, so changing
             // it would silently relabel every past movement
             currencySpinner.isEnabled = false
             column.addView(Widgets.caption(
                 context,
-                context.getString(R.string.wallet_currency_locked, ledger.entriesFor(account.id).size)
+                context.getString(R.string.wallet_currency_locked, entryCount)
             ))
         }
 

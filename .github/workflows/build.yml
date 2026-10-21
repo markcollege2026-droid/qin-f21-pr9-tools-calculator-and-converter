@@ -5,8 +5,9 @@
 #   offline-build:
 #     1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner, android.jar)
 #     2. self test the pure Kotlin modules (258 checks)
-#     3. compile, dex, package and sign the APK without an Android SDK
-#     4. verify the signature and upload the APK as an artefact
+#     3. compile the app against the core modules as separate units (module boundary)
+#     4. compile, dex, package and sign the APK without an Android SDK
+#     5. verify the signature and upload the APK as an artefact
 #
 #   gradle-build:
 #     1. set up JDK 17 and the Android SDK (platform 30)
@@ -41,6 +42,11 @@ jobs:
 
       - name: Run self test (pure Kotlin modules, 258 checks)
         run: tools/selftest.sh
+
+      - name: Check the module boundary (app against the core modules)
+        # build-offline.sh compiles every module in one kotlinc pass and therefore
+        # accepts cross-module code the Gradle build rejects; this catches it early
+        run: tools/check-modules.sh
 
       - name: Build and sign APK (offline pipeline)
         run: tools/build-offline.sh

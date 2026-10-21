@@ -427,6 +427,10 @@ class WalletEntryScreen(
         }
     }
 
+    /** The main-currency side of a withdrawal, or null for the other two movements. */
+    private fun counterAmount(entry: WalletEntry): Double? =
+        if (entry.kind == WalletEntryKind.WITHDRAW) entry.counterAmount else null
+
     private fun recordHistory(
         entry: WalletEntry,
         account: WalletAccount,
@@ -450,14 +454,13 @@ class WalletEntryScreen(
                 summary = summary,
                 details = listOfNotNull(
                     entry.note.ifEmpty { null },
-                    if (kind == WalletEntryKind.WITHDRAW && entry.counterAmount != null) {
+                    // local copy: a nullable property of another module is not smart cast
+                    counterAmount(entry)?.let { counter ->
                         context.getString(
                             R.string.wallet_withdraw_detail,
-                            Money.format(entry.counterAmount, ledger.mainAccount?.currency ?: ""),
+                            Money.format(counter, ledger.mainAccount?.currency ?: ""),
                             Money.format(entry.rate ?: 1.0, "", 4)
                         )
-                    } else {
-                        null
                     }
                 )
             )

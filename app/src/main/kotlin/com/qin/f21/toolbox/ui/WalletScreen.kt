@@ -414,12 +414,15 @@ class WalletScreen(host: ScreenHost) : Screen(host) {
         val parts = ArrayList<String>()
         if (entry.timestamp > 0L) parts.add(dateFormat.format(Date(entry.timestamp)))
         if (entry.note.isNotEmpty()) parts.add(entry.note)
-        if (entry.kind == WalletEntryKind.WITHDRAW && entry.counterAmount != null && account != null) {
+        // a local copy: `counterAmount` comes from another module, so the compiler will
+        // not smart cast the nullable property itself
+        val counter = entry.counterAmount
+        if (entry.kind == WalletEntryKind.WITHDRAW && counter != null && account != null) {
             val main = ledger.mainAccount
             parts.add(
                 context.getString(
                     R.string.wallet_withdraw_detail,
-                    Money.format(entry.counterAmount, main?.currency ?: ""),
+                    Money.format(counter, main?.currency ?: ""),
                     Money.format(entry.rate ?: 1.0, "", 4)
                 )
             )
