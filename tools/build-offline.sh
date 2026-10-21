@@ -117,7 +117,13 @@ python3 "$ROOT/tools/package_apk.py" \
 # --- 7. sign -----------------------------------------------------------------
 log "signing (debug key)"
 mkdir -p "$ROOT/build/outputs"
-KS="$BUILD/debug.keystore"
+# The key lives OUTSIDE $BUILD on purpose: $BUILD is wiped at the start of every build,
+# so a key stored there would be regenerated each time and the next APK could not be
+# installed over the previous one (signature mismatch -> "app not installed"). The
+# directory is git-ignored (*.keystore), and CI starts from a clean checkout, so a CI
+# artefact still gets a fresh key - only repeated local builds share theirs.
+KS="${KEYSTORE_FILE:-$ROOT/tools/.keystore/debug.keystore}"
+mkdir -p "$(dirname "$KS")"
 if [ ! -f "$KS" ]; then
   keytool -genkeypair -v -keystore "$KS" -storepass android -alias androiddebugkey \
     -keypass android -keyalg RSA -keysize 2048 -validity 10000 \

@@ -233,6 +233,7 @@
     <string name="settings_import">Import a backup</string>
     <string name="settings_import_hint">Read a toolbox JSON file from the device.</string>
     <string name="settings_imported">Imported %1$d history entries and %2$d favourites.</string>
+    <string name="settings_imported_with_wallet">Imported %1$d history entries, %2$d favourites and the wallet.</string>
     <string name="settings_import_failed">The file could not be read.</string>
     <string name="settings_clear_history">Clear the history</string>
     <string name="settings_clear_history_hint">Removes every stored result.</string>
@@ -242,6 +243,75 @@
     <string name="settings_version">Version %1$s</string>
     <string name="settings_offline_note">The app has no internet permission. Everything runs on the device.</string>
     <string name="settings_saved">Saved.</string>
+
+    <!-- ==================== Wallet ==================== -->
+    <string name="wallet_tool_name">Wallet</string>
+    <string name="wallet_add">Add</string>
+    <string name="wallet_expense">Expense</string>
+    <string name="wallet_top_up">Top up</string>
+    <string name="wallet_withdraw">Withdraw</string>
+
+    <string name="wallet_main_name">Main balance</string>
+    <string name="wallet_main_balance">Main balance</string>
+    <string name="wallet_total">Total</string>
+    <string name="wallet_total_no_cash">Only the main balance is counted.</string>
+    <string name="wallet_total_note_all">Main balance + %1$d cash account(s), converted at the bundled offline rates.</string>
+    <string name="wallet_total_note">%1$d of %2$d cash accounts counted · %3$d separate</string>
+
+    <string name="wallet_cash_accounts">Cash accounts</string>
+    <string name="wallet_no_cash">No cash account yet. Add one to withdraw from the main balance.</string>
+    <string name="wallet_add_account">New cash account</string>
+    <string name="wallet_converted_line">%1$s ≈ %2$s</string>
+    <string name="wallet_separate_badge">Separate · not in the total</string>
+
+    <string name="wallet_activity">Activity</string>
+    <string name="wallet_no_entries">Nothing recorded yet. Tap + to add an expense, a top up or a withdrawal.</string>
+    <string name="wallet_headline_top_up">Top up · %1$s</string>
+    <string name="wallet_headline_expense">Expense · %1$s</string>
+    <string name="wallet_headline_withdraw">Withdrawn into %1$s</string>
+    <string name="wallet_withdraw_detail">%1$s from the main balance · 1 unit = %2$s</string>
+    <string name="wallet_unknown_account">Unknown account</string>
+    <string name="wallet_delete_entry">Delete this entry</string>
+    <string name="wallet_delete_confirm">The balance is recalculated without this entry. Delete it?</string>
+    <string name="wallet_entry_deleted">Entry deleted.</string>
+
+    <string name="wallet_account">Account</string>
+    <string name="wallet_withdraw_to">Withdraw into</string>
+    <string name="wallet_note_hint">Note (optional)</string>
+    <string name="wallet_save_movement">Save</string>
+    <string name="wallet_saved">Saved.</string>
+
+    <string name="wallet_preview_same_currency">Same currency as %1$s, no conversion needed.</string>
+    <string name="wallet_preview_cost">Costs %1$s from %2$s.</string>
+    <string name="wallet_preview_rate">Rate: 1 %2$s = %1$s (bundled offline rate).</string>
+    <string name="wallet_preview_available">Available in %2$s: %1$s</string>
+    <string name="wallet_preview_after">%1$s afterwards: %2$s</string>
+    <string name="wallet_preview_cash_after">%1$s afterwards: %2$s</string>
+
+    <string name="wallet_error_amount">Enter an amount above zero.</string>
+    <string name="wallet_error_amount_or_zero">Enter an amount, or zero.</string>
+    <string name="wallet_error_account">That account does not exist.</string>
+    <string name="wallet_error_no_main">Create a main balance first.</string>
+    <string name="wallet_error_no_cash">Add a cash account first.</string>
+    <string name="wallet_error_insufficient">%2$s only holds %1$s.</string>
+    <string name="wallet_error_insufficient_generic">The balance does not hold that amount (%1$s).</string>
+
+    <string name="wallet_new_account">New cash account</string>
+    <string name="wallet_edit_account">Edit account</string>
+    <string name="wallet_account_name">Name</string>
+    <string name="wallet_cash_default_name">Cash</string>
+    <string name="wallet_account_currency">Currency</string>
+    <string name="wallet_currency_locked">The currency is fixed while the account has entries (%1$d).</string>
+    <string name="wallet_opening_balance">Opening balance</string>
+    <string name="wallet_main_opening">Opening balance of the main balance</string>
+    <string name="wallet_current_balance">Current balance: %1$s</string>
+    <string name="wallet_include_in_total">Count in the total</string>
+    <string name="wallet_include_hint">Turn it off to keep this cash separate from the main balance.</string>
+    <string name="wallet_account_saved">Account saved.</string>
+    <string name="wallet_delete_account">Delete</string>
+    <string name="wallet_delete_account_confirm">Delete %1$s? This cannot be undone.</string>
+    <string name="wallet_delete_blocked">An account with entries cannot be deleted. Delete its entries first.</string>
+    <string name="wallet_account_deleted">Account deleted.</string>
 
     <!-- ==================== About ==================== -->
     <string name="about_version">Version %1$s</string>

@@ -3,7 +3,7 @@
 [![Build](https://github.com/markcollege2026-droid/qin-f21-pr9-tools-calculator-and-converter/actions/workflows/build.yml/badge.svg)](https://github.com/markcollege2026-droid/qin-f21-pr9-tools-calculator-and-converter/actions/workflows/build.yml)
 
 An **offline utility toolbox** for the Qin F21 Pro (Xiaomi Qin F21 Pro, 2.8" 480 × 640,
-Android 11 / API 30). The app contains 21 tools in five categories, uses no third party
+Android 11 / API 30). The app contains 22 tools in five categories, uses no third party
 runtime dependency, has **no `INTERNET` permission** and never contacts a server.
 
 **Requires Android 11 (API 30) or newer** – that is also the operating system of the
@@ -11,7 +11,7 @@ target device, so nothing below Android 11 is supported or tested.
 
 ```
 Convert   Unit converter · Currency · Time zones · Date & time
-Calculate Calculator · Quick calculators · Geometry
+Calculate Calculator · Quick calculators · Geometry · Wallet
 Measure   Stopwatch · Timer · Sound meter
 Media     QR & barcode · Camera · Voice recorder · Infrared remote · Flashlight
 Device    GPS · Diagnostics · History · Favourites · Settings · About
@@ -30,6 +30,7 @@ Device    GPS · Diagnostics · History · Favourites · Settings · About
 | **Calculator** | Scientific expression engine (functions, constants, `ANS`, implicit multiplication, factorial), history |
 | **Quick calculators** | Percentage, percentage change, discount/tax/tip, bill splitting, BMI, loan, interest, GCD/LCM/primes, Roman numerals, number bases, random numbers, fuel cost, speed/pace, cooking time, age |
 | **Geometry** | Circle, rectangle, triangle, right triangle, trapezoid, sphere, cylinder |
+| **Wallet** | Main balance + any number of cash accounts in their own currencies, one `+` button that pops out expense / top up / withdraw, withdrawals converted with the bundled rates, cash accounts can be separated from the total |
 | **Stopwatch** | Lap times with split times, `SystemClock` based (accurate while the screen is off) |
 | **Timer** | Countdown with vibration and a notification, preset durations |
 | **Sound meter** | Live dB estimate, dBFS, RMS, peak, 7 band spectrum, calibration offset |
@@ -98,7 +99,7 @@ See [`docs/HARDWARE.md`](docs/HARDWARE.md) for the per-tool support matrix.
 
 The sheet is rendered directly from `core/design/src/main/res` by
 `tools/render_design_sheet.py`, so it shows the shipped palette, type scale and the full
-61-icon set rather than a mock-up. It is a rendering of the resources, not a screenshot
+62-icon set rather than a mock-up. It is a rendering of the resources, not a screenshot
 of the running app.
 
 ## Building
@@ -128,7 +129,7 @@ See [`docs/BUILD.md`](docs/BUILD.md) for details and for the tool-chain download
 ## Testing
 
 ```bash
-tools/selftest.sh             # 183 checks over the pure Kotlin modules
+tools/selftest.sh             # 258 checks over the pure Kotlin modules
 ```
 
 The JSON, conversion, currency, time zone, expression and calculator modules do not use
@@ -141,11 +142,11 @@ still unverified.
 
 | Item | Size |
 |------|------|
-| Signed APK | **1.11 MiB** (1,161,286 bytes) |
-| `classes.dex` | 3.04 MB (1.02 MB compressed inside the APK) |
-| Compiled resources | 34.5 KB |
-| Bundled assets (rates, IR codes) | 1.1 KB |
-| Uncompressed payload | 3.18 MB |
+| Signed APK | **1.15 MiB** (1,202,402 bytes) |
+| `classes.dex` | 3.12 MB (1.05 MB compressed inside the APK) |
+| Compiled resources | 33.3 KB |
+| Bundled assets (rates, IR codes) | 3.5 KB |
+| Uncompressed payload | 3.27 MB |
 
 The installed size is therefore around 4–5 MB (APK + extracted dex/resources), well
 below the 35 MB target. The number above is measured from the signed artefact with
@@ -159,7 +160,8 @@ core/common/    JSON parser/writer, number formatting      (pure Kotlin)
 core/conversion/ unit catalog + conversion engine          (pure Kotlin)
 core/calc/      expression engine + calculators            (pure Kotlin)
 core/hardware/  capability detection, torch, IR, GNSS, mic  (Android)
-core/data/      local store, settings, file provider        (Android)
+core/data/      local store, settings, wallet store           (Android)
+core/wallet/    balances, cash accounts, withdrawals          (pure Kotlin)
 core/design/    colours, type scale, drawables, icons      (resources)
 third_party/    vendored ZXing core (Apache 2.0)
 tools/          offline build, self test, icon generator, design sheet renderer

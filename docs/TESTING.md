@@ -13,10 +13,11 @@ no KVM, and `dl.google.com` / `maven.google.com` are blocked).
 tools/selftest.sh
 ```
 
-Compiles the three pure Kotlin modules (`core/common`, `core/conversion`, `core/calc`)
-plus `tools/selftest/Selftest.kt` with `kotlinc` and runs them on a plain JVM.
+Compiles the pure Kotlin modules (`core/common`, `core/conversion`, `core/calc`,
+`core/wallet`) plus `tools/selftest/Selftest.kt` with `kotlinc` and runs them on a plain
+JVM.
 
-**Result: 183 checks, 0 failures.**
+**Result: 258 checks, 0 failures.**
 
 The self test (and the offline build below) also runs in CI on every push and pull
 request – see `.github/workflows/build.yml` and `docs/BUILD.md`, section "Continuous
@@ -31,6 +32,7 @@ integration".
 | Expression | precedence, parentheses, powers, functions (`sin`, `sqrt`, `ln`, `min`, `max`, `round`, `mod`, `deg`), constants, `ANS`, implicit multiplication, factorial, error handling |
 | Calculators | percentage, price breakdown, bill splitting, BMI, loan, interest, GCD/LCM/primes, Roman numerals, number bases, random numbers, date differences, geometry, travel, cooking |
 | Local store | JSON round trip of a history entry and of a favourite (the import/export format) |
+| Wallet | money rounding/parsing/formatting, opening balance, top up, expense, refusal of an expense the balance cannot cover, several cash accounts in different currencies, withdrawal with and without a currency conversion (debited amount and recorded rate), refused withdrawals (no main balance, unknown account, main used as a pocket, zero, negative), cash pockets taking money in and paying out, the combined total with and without separated accounts, undoing a movement by deleting it, account removal rules, JSON and text round trip of the persisted ledger |
 
 Two real bugs were found and fixed by these tests:
 
@@ -44,9 +46,9 @@ Two real bugs were found and fixed by these tests:
 `tools/build-offline.sh` runs end to end and produces a signed APK:
 
 ```
-APK (signed)          :     1.10 MB
-uncompressed payload  :     3.17 MB
-classes.dex           :     3.03 MB
+APK (signed)          :     1.15 MB
+uncompressed payload  :     3.27 MB
+classes.dex           :     3.12 MB
 ```
 
 The artefact was checked with `aapt2 dump badging`:
@@ -75,6 +77,7 @@ The signature was verified with `apksigner verify --print-certs` (v1 + v2 + v3).
 | Area | Status | Why |
 |------|--------|-----|
 | Android UI rendering and interaction | **not executed** | no emulator / no device available |
+| Wallet screens (pop-out `+` menu, entry forms, account editor) | **not executed** | the money logic behind them is covered by the self test; the views, the animations and the keypad routing need a device |
 | Camera2 preview, QR decoding, photo capture | **not executed** | needs a real camera |
 | Torch, IR emitter, GNSS, microphone | **not executed** | need the real hardware |
 | D-pad and T9 keypad navigation | **implemented, not exercised** | needs a device |
@@ -115,7 +118,10 @@ adb logcat | grep -i toolbox
 
 Checklist: every screen shows a focus ring on its first control as soon as it opens, the
 home screen scrolls with the D-pad, digits open the first nine tools, the
-converter accepts hardware keypad digits, a running countdown keeps counting after
+converter accepts hardware keypad digits, the wallet `+` button pops the three
+movements out and Back folds them back, a withdrawal into a cash account of another
+currency debits the main balance by the converted amount, a cash account switched off in
+its editor disappears from the total but keeps its balance, a running countdown keeps counting after
 leaving the Timer screen and still vibrates and notifies when it ends, the stopwatch keeps
 its time and laps across screens and survives the screen being turned off, the scanner decodes a printed QR code, the sound meter reacts to a
 sound, GPS locks onto a position and the infrared screen either shows the code list or

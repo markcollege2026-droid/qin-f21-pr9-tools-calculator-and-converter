@@ -25,6 +25,7 @@ import com.qin.f21.toolbox.ui.SoundMeterScreen
 import com.qin.f21.toolbox.ui.StopwatchScreen
 import com.qin.f21.toolbox.ui.TimeZoneScreen
 import com.qin.f21.toolbox.ui.TimerScreen
+import com.qin.f21.toolbox.ui.WalletScreen
 
 /**
  * Registry of every tool in the toolbox.
@@ -94,6 +95,11 @@ object Tools {
             "geometry", "Geometry", "calculate", R.drawable.ic_geometry,
             "Circle, triangle, rectangle, sphere and Pythagoras",
             factory = { GeometryScreen(it) }
+        ),
+        ToolDef(
+            "wallet", "Wallet", "calculate", R.drawable.ic_wallet,
+            "Main balance, cash pockets in other currencies, expenses and withdrawals",
+            factory = { WalletScreen(it) }
         ),
 
         // --- measure ------------------------------------------------------------

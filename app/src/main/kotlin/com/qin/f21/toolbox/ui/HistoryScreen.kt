@@ -132,8 +132,15 @@ class HistoryScreen(host: ScreenHost) : Screen(host) {
             val directory = context.getExternalFilesDir(null) ?: context.filesDir
             val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
             val file = File(directory, "toolbox-history-$stamp.$format")
-            val content = if (format == "csv") toCsv(Toolbox.store.history) else
-                JsonWriter.write(Toolbox.store.exportDocument(), pretty = true)
+            val content = if (format == "csv") toCsv(Toolbox.store.history) else {
+                // the backup carries the wallet next to the history and the favourites, so
+                // one file restores the whole app state (see SettingsScreen.onActivityResult)
+                val document = Toolbox.store.exportDocument()
+                val withWallet = com.qin.f21.toolbox.core.common.Json.Obj(
+                    document.asObject() + ("wallet" to Toolbox.wallet.ledger.toJson())
+                )
+                JsonWriter.write(withWallet, pretty = true)
+            }
             file.writeText(content)
             val uri = Uri.parse("content://${context.packageName}.fileprovider/${file.name}")
             val intent = Intent(Intent.ACTION_SEND)
