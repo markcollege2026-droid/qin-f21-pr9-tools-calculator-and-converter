@@ -1,5 +1,6 @@
 package com.qin.f21.toolbox.ui
 
+import android.Manifest
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
@@ -8,6 +9,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.qin.f21.toolbox.R
+import com.qin.f21.toolbox.CountdownAlarm
 import com.qin.f21.toolbox.Timers
 import com.qin.f21.toolbox.core.calc.DurationFormatter
 
@@ -29,30 +31,32 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
     private lateinit var hoursField: EditText
     private lateinit var minutesField: EditText
     private lateinit var secondsField: EditText
+    private var askedForNotifications = false
+
+    companion object {
+        private const val REQUEST_NOTIFICATIONS = 3002
+    }
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
         val root = Widgets.column(context)
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        val timeCard = Widgets.column(context)
+        val timeCard = Widgets.displayCard(context, 16)
         timeCard.gravity = Gravity.CENTER
-        timeCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 18),
-            Widgets.dp(context, 12), Widgets.dp(context, 18)
-        )
-        timeCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
+        val eyebrow = Widgets.eyebrow(context, context.getString(R.string.timer_remaining))
+        timeCard.addView(eyebrow)
         timeLabel = Widgets.text(context, "05:00", R.style.Text_Display)
         timeLabel.gravity = Gravity.CENTER
         timeLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 38f)
-        timeCard.addView(timeLabel)
+        timeCard.addView(timeLabel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = Widgets.dp(context, 6) })
         statusLabel = Widgets.caption(context, context.getString(R.string.timer_ready))
         timeCard.addView(statusLabel)
         root.addView(timeCard, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 8), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 12), Widgets.dp(context, 12), 0) })
 
         val inputRow = Widgets.row(context)
         hoursField = Widgets.numericField(context, "0")
@@ -61,15 +65,15 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
         hoursField.setText((Timers.countdownTotal / 3_600_000L).toString())
         minutesField.setText((Timers.countdownTotal / 60_000L % 60L).toString())
         secondsField.setText((Timers.countdownTotal / 1000L % 60L).toString())
-        inputRow.addView(hoursField, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        inputRow.addView(hoursField, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
         inputRow.addView(Widgets.text(context, "h", R.style.Text_Caption), LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ))
-        inputRow.addView(minutesField, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        inputRow.addView(minutesField, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
         inputRow.addView(Widgets.text(context, "m", R.style.Text_Caption), LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ))
-        inputRow.addView(secondsField, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        inputRow.addView(secondsField, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
         inputRow.addView(Widgets.text(context, "s", R.style.Text_Caption), LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ))
@@ -87,24 +91,30 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
         actions.addView(resetButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         root.addView(actions, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 8), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0) })
 
-        val presets = Widgets.row(context)
+        // Presets as chips in one scrollable line: five 14 sp labels never fit 320 dp.
         val presetValues = listOf(1 to "1 min", 3 to "3 min", 5 to "5 min", 10 to "10 min", 25 to "25 min")
+        val presetScroll = android.widget.HorizontalScrollView(context)
+        presetScroll.isHorizontalScrollBarEnabled = false
+        presetScroll.clipToPadding = false
+        val presets = Widgets.row(context)
+        presets.gravity = Gravity.CENTER_VERTICAL
         for ((minutes, label) in presetValues) {
-            val button = Widgets.compactButton(context, label)
-            button.setOnClickListener {
+            val button = Widgets.chip(context, label) {
                 hoursField.setText("0")
                 minutesField.setText(minutes.toString())
                 secondsField.setText("0")
                 readInput()
             }
-            presets.addView(button, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            presets.addView(Widgets.spacer(context, 4))
+            presets.addView(button, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Widgets.dp(context, 32)
+            ).apply { rightMargin = Widgets.dp(context, 6) })
         }
-        root.addView(presets, LinearLayout.LayoutParams(
+        presetScroll.addView(presets)
+        root.addView(presetScroll, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), 0, Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0) })
 
         updateDisplay()
         return root
@@ -127,9 +137,29 @@ class TimerScreen(host: ScreenHost) : Screen(host) {
                 host.showMessage(host.activity.getString(R.string.timer_set_duration))
                 return
             }
+            requestNotificationPermissionOnce()
             Timers.startCountdown()
         }
         updateDisplay()
+    }
+
+    /**
+     * Android 13 (API 33) and newer require POST_NOTIFICATIONS before the countdown can
+     * post its alert.
+     *
+     * The countdown is started either way: the vibration is the primary signal and it needs
+     * no permission, so a denial only costs the notification, and the user is told that
+     * once instead of being blocked by a dialog.
+     */
+    private fun requestNotificationPermissionOnce() {
+        val context = host.activity
+        if (CountdownAlarm.canNotify(context)) return
+        if (askedForNotifications) {
+            host.showMessage(context.getString(R.string.timer_notifications_blocked))
+            return
+        }
+        askedForNotifications = true
+        host.askPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
     }
 
     private fun reset() {

@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="18dp"
+        android:layout_marginBottom="24dp"
         android:gravity="center"
         android:orientation="horizontal">
 
@@ -47,9 +47,11 @@
 
         <View
             android:id="@+id/btn_shutter"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:background="@drawable/bg_result" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_shutter"
+            android:focusable="true"
+            android:clickable="true" />
 
         <ImageView
             android:id="@+id/btn_torch"

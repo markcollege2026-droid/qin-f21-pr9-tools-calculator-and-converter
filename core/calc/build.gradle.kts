@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.qin.f21.toolbox.core.calc"
-    compileSdk = 30
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 30

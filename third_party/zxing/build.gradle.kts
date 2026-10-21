@@ -15,7 +15,7 @@ plugins {
 
 android {
     namespace = "com.google.zxing"
-    compileSdk = 30
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 30

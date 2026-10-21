@@ -37,8 +37,8 @@ class CameraScreen(host: ScreenHost) : Screen(host) {
         val scroll = ScrollView(context).forKeypad()
         val column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 8),
-            Widgets.dp(context, 10), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
 
         val card = Widgets.column(context)
@@ -48,7 +48,7 @@ class CameraScreen(host: ScreenHost) : Screen(host) {
             Widgets.dp(context, 12), Widgets.dp(context, 12)
         )
         card.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline), 16
         )
         preview = ImageView(context)
         preview.setImageResource(R.drawable.ic_camera)

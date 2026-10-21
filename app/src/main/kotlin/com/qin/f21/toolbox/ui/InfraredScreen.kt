@@ -37,7 +37,7 @@ class InfraredScreen(host: ScreenHost) : Screen(host) {
         val column = Widgets.column(context)
         column.setPadding(
             Widgets.dp(context, 10), Widgets.dp(context, 6),
-            Widgets.dp(context, 10), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
 
         val statusCard = Widgets.column(context)
@@ -46,7 +46,7 @@ class InfraredScreen(host: ScreenHost) : Screen(host) {
             Widgets.dp(context, 12), Widgets.dp(context, 8)
         )
         statusCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline), 12
         )
         statusLabel = Widgets.text(context, "", R.style.Text_Body)
         statusCard.addView(statusLabel)

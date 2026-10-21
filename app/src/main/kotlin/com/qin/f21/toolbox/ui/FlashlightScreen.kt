@@ -31,22 +31,16 @@ class FlashlightScreen(host: ScreenHost) : Screen(host) {
         root.gravity = Gravity.CENTER
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        val card = Widgets.column(context)
+        val card = Widgets.displayCard(context, 20)
         card.gravity = Gravity.CENTER
-        card.setPadding(
-            Widgets.dp(context, 16), Widgets.dp(context, 20),
-            Widgets.dp(context, 16), Widgets.dp(context, 20)
-        )
-        card.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
 
         iconView = ImageView(context)
         iconView.setImageResource(R.drawable.ic_flashlight)
         iconView.setColorFilter(Widgets.color(context, R.color.text_muted))
         card.addView(iconView, LinearLayout.LayoutParams(Widgets.dp(context, 64), Widgets.dp(context, 64)))
 
-        stateLabel = Widgets.text(context, "", R.style.Text_Title)
+        stateLabel = Widgets.text(context, "", R.style.Text_Display)
+        stateLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 24f)
         stateLabel.gravity = Gravity.CENTER
         stateLabel.setPadding(0, Widgets.dp(context, 12), 0, 0)
         card.addView(stateLabel)

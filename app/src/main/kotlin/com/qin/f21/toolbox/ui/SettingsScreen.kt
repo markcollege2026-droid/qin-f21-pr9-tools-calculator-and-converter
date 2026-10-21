@@ -33,8 +33,8 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 6),
-            Widgets.dp(context, 10), Widgets.dp(context, 16)
+            Widgets.dp(context, 12), Widgets.dp(context, 4),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
         scroll.addView(column, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -62,6 +62,7 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
         }
 
         column.addView(Widgets.sectionHeader(context, context.getString(R.string.settings_audio)))
+        val calibrationCard = Widgets.card(context)
         val calibrationRow = Widgets.row(context)
         calibrationRow.gravity = Gravity.CENTER_VERTICAL
         val label = Widgets.text(context, context.getString(R.string.settings_calibration), R.style.Text_Label)
@@ -69,8 +70,9 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
         calibrationRow.addView(label, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         val field = Widgets.numericField(context, "94")
         field.setText(Toolbox.settings.micCalibrationDb.toString())
-        calibrationRow.addView(field, LinearLayout.LayoutParams(Widgets.dp(context, 96), ViewGroup.LayoutParams.WRAP_CONTENT))
-        column.addView(calibrationRow)
+        calibrationRow.addView(field, LinearLayout.LayoutParams(Widgets.dp(context, 96), Widgets.dp(context, 44)))
+        calibrationCard.addView(calibrationRow)
+        column.addView(calibrationCard)
         val saveCalibration = Widgets.button(context, context.getString(R.string.action_save), secondary = true)
         saveCalibration.setOnClickListener {
             val value = Numbers.parse(field.text?.toString() ?: "")
@@ -83,17 +85,20 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
         }
         column.addView(saveCalibration, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { topMargin = Widgets.dp(context, 6) })
+        ).apply { topMargin = Widgets.dp(context, 8) })
         column.addView(Widgets.caption(context, context.getString(R.string.settings_calibration_hint)))
 
         column.addView(Widgets.sectionHeader(context, context.getString(R.string.settings_currency)))
+        val rateCard = Widgets.card(context)
         val codeRow = Widgets.row(context)
         val codeField = Widgets.editField(context, "EUR")
         codeField.inputType = android.text.InputType.TYPE_CLASS_TEXT
-        codeRow.addView(codeField, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        codeRow.addView(codeField, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
+        codeRow.addView(Widgets.spacer(context, 8))
         val rateField = Widgets.numericField(context, "0.92")
-        codeRow.addView(rateField, LinearLayout.LayoutParams(Widgets.dp(context, 110), ViewGroup.LayoutParams.WRAP_CONTENT))
-        column.addView(codeRow)
+        codeRow.addView(rateField, LinearLayout.LayoutParams(Widgets.dp(context, 104), Widgets.dp(context, 44)))
+        rateCard.addView(codeRow)
+        column.addView(rateCard)
         val rateActions = Widgets.row(context)
         val applyRate = Widgets.button(context, context.getString(R.string.action_update), secondary = true)
         applyRate.setOnClickListener {
@@ -111,7 +116,7 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
             }
         }
         rateActions.addView(applyRate, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        rateActions.addView(Widgets.spacer(context, 6))
+        rateActions.addView(Widgets.spacer(context, 8))
         val resetRates = Widgets.button(context, context.getString(R.string.action_reset_rates), secondary = true)
         resetRates.setOnClickListener {
             Toolbox.settings.currencyOverrides = emptyMap()
@@ -122,7 +127,7 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
         rateActions.addView(resetRates, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         column.addView(rateActions, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { topMargin = Widgets.dp(context, 6) })
+        ).apply { topMargin = Widgets.dp(context, 8) })
         val overrides = Toolbox.settings.currencyOverrides
         if (overrides.isNotEmpty()) {
             column.addView(Widgets.caption(
@@ -168,52 +173,49 @@ class SettingsScreen(host: ScreenHost) : Screen(host) {
         val row = Widgets.row(context)
         row.gravity = Gravity.CENTER_VERTICAL
         row.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 8),
-            Widgets.dp(context, 10), Widgets.dp(context, 8)
+            Widgets.dp(context, 12), Widgets.dp(context, 10),
+            Widgets.dp(context, 12), Widgets.dp(context, 10)
         )
         row.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline), 12
         )
+        row.minimumHeight = Widgets.dp(context, 60)
         val textColumn = Widgets.column(context)
         textColumn.addView(Widgets.text(context, title, R.style.Text_Body))
-        textColumn.addView(Widgets.text(context, hint, R.style.Text_Caption))
+        val note = Widgets.text(context, hint, R.style.Text_Caption)
+        note.maxLines = 2
+        note.setPadding(0, Widgets.dp(context, 2), 0, 0)
+        textColumn.addView(note)
         row.addView(textColumn, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         val toggle = android.widget.Switch(context)
         toggle.isChecked = value
+        toggle.setTextAppearance(context, R.style.Widget_App_Switch)
         toggle.setOnCheckedChangeListener { _, checked -> onChange(checked) }
         row.addView(toggle, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
+        ).apply { leftMargin = Widgets.dp(context, 8) })
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        params.bottomMargin = Widgets.dp(context, 5)
+        params.bottomMargin = Widgets.dp(context, 8)
         row.layoutParams = params
         column.addView(row)
     }
 
     private fun addAction(title: String, hint: String, onClick: () -> Unit) {
         val context = host.activity
-        val row = Widgets.row(context)
-        row.gravity = Gravity.CENTER_VERTICAL
-        row.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 8),
-            Widgets.dp(context, 10), Widgets.dp(context, 8)
+        val row = Widgets.listRow(
+            context,
+            title,
+            hint,
+            iconRes = R.drawable.ic_export,
+            iconTint = R.color.text_secondary,
+            onClick = onClick
         )
-        row.background = Widgets.focusBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
-        row.isFocusable = true
-        row.isClickable = true
-        val textColumn = Widgets.column(context)
-        textColumn.addView(Widgets.text(context, title, R.style.Text_Body))
-        textColumn.addView(Widgets.text(context, hint, R.style.Text_Caption))
-        row.addView(textColumn, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        row.setOnClickListener { onClick() }
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        params.bottomMargin = Widgets.dp(context, 5)
+        params.bottomMargin = Widgets.dp(context, 8)
         row.layoutParams = params
         column.addView(row)
     }

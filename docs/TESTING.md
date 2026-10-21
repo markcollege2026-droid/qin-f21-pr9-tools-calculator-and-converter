@@ -108,7 +108,7 @@ contracts, but they have not been run.
 ### How to verify on a device
 
 ```bash
-adb install -r build/outputs/qin-f21-toolbox-1.0.0.apk
+adb install -r build/outputs/qin-f21-toolbox-1.1.0-release.apk
 adb shell am start -n com.qin.f21.toolbox/.MainActivity
 adb logcat | grep -i toolbox
 ```

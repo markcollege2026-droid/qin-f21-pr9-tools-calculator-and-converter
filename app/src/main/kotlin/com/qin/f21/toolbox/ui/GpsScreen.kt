@@ -42,22 +42,18 @@ class GpsScreen(host: ScreenHost) : Screen(host) {
         val scroll = ScrollView(context).forKeypad()
         val column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 6),
-            Widgets.dp(context, 10), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
 
-        val card = Widgets.column(context)
+        val card = Widgets.displayCard(context, 14)
         card.gravity = Gravity.CENTER
-        card.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 16),
-            Widgets.dp(context, 12), Widgets.dp(context, 16)
-        )
-        card.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
-        coordinateLabel = Widgets.text(context, "—", R.style.Text_Display)
+        card.addView(Widgets.eyebrow(context, context.getString(R.string.gps_position)))
+        coordinateLabel = Widgets.text(context, "—", R.style.Text_Mono)
         coordinateLabel.gravity = Gravity.CENTER
-        coordinateLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 22f)
+        coordinateLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
+        coordinateLabel.setTextColor(Widgets.color(context, R.color.primary))
+        coordinateLabel.setPadding(0, Widgets.dp(context, 6), 0, 0)
         card.addView(coordinateLabel)
         detailLabel = Widgets.caption(context, context.getString(R.string.gps_waiting))
         detailLabel.gravity = Gravity.CENTER

@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "com.qin.f21.toolbox"
-    compileSdk = 30
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.qin.f21.toolbox"
-        minSdk = 30
-        targetSdk = 30
-        versionCode = 1
-        versionName = "1.0.0"
+        minSdk = 30          // Android 11, the oldest supported release
+        targetSdk = 36       // Android 16, required by current Android and Google Play
+        versionCode = 2
+        versionName = "1.1.0"
         vectorDrawables.useSupportLibrary = false
     }
 
@@ -36,16 +36,15 @@ android {
         jvmTarget = "1.8"
     }
 
-    packagingOptions {
+    // `packagingOptions` was removed in AGP 8; this is the replacement block.
+    packaging {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/DEPENDENCIES")
     }
 
     lint {
-        // ExpiredTargetSdkVersion (fatal) enforces the Google Play policy that apps
-        // target API 31+. This app is not distributed through Play - it is sideloaded
-        // onto the Qin F21 Pro, an Android 11 (API 30) appliance - so targetSdk 30 is
-        // the correct value by design and the policy check does not apply.
-        disable += "ExpiredTargetSdkVersion"
+        // Lint used to require this app (targetSdk 30) to be exempted from the Play
+        // policy check. It targets API 36 now, so no exemption is needed any more.
+        warningsAsErrors = false
     }
 }
 

@@ -22,6 +22,7 @@ class ToolboxApp : Application() {
         super.onCreate()
         instance = this
         Timers.attach(this)
+        CountdownAlarm.ensureChannel(this)
         // The exchange rates are bundled with the APK, they are read once at startup.
         val json = com.qin.f21.toolbox.util.Assets.readJson(this, "data/currency.json")
         if (json != null) {

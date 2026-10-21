@@ -3,14 +3,15 @@
 # Both supported build paths run on every push and pull request:
 #
 #   offline-build:
-#     1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner, android.jar)
+#     1. fetch the pinned tool-chain (JDK 11, kotlinc, aapt2, d8, apksigner,
+#        android.jar for API 36)
 #     2. self test the pure Kotlin modules (183 checks)
-#     3. compile, dex, package and sign the APK without an Android SDK
-#     4. verify the signature and upload the APK as an artefact
+#     3. compile, dex, package and sign the release APK without an Android SDK
+#     4. verify the signature, the minSdk (30) and targetSdk (36) and upload the APK
 #
 #   gradle-build:
-#     1. set up JDK 17 and the Android SDK (platform 30)
-#     2. build the app with Gradle (AGP 7.4.2, Kotlin 1.8.22)
+#     1. set up JDK 17 and the Android SDK (platform 36)
+#     2. build the app with Gradle (AGP 8.5.2, Kotlin 1.9.25)
 #     3. upload the debug and release APKs as artefacts
 name: Build
 
@@ -32,9 +33,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: tools/toolchain
-          key: toolchain-v1-${{ hashFiles('tools/fetch-toolchain.sh') }}
+          key: toolchain-v2-${{ hashFiles('tools/fetch-toolchain.sh') }}
           restore-keys: |
-            toolchain-v1-
+            toolchain-v2-
 
       - name: Fetch offline tool-chain
         run: tools/fetch-toolchain.sh
@@ -45,22 +46,32 @@ jobs:
       - name: Build and sign APK (offline pipeline)
         run: tools/build-offline.sh
 
-      - name: Verify APK signature
+      - name: Verify APK signature, SDK levels and dex
         run: |
           TC=tools/toolchain
+          APK=build/outputs/qin-f21-toolbox-1.1.0-release.apk
           "$TC/jdk/bin/java" -cp "$TC/apksigner.jar" \
-            com.android.apksigner.ApkSignerTool verify --print-certs \
-            build/outputs/qin-f21-toolbox-1.0.0.apk
+            com.android.apksigner.ApkSignerTool verify --print-certs "$APK"
+          "$TC/aapt2" dump badging "$APK" | grep -E "package:|[sS]dkVersion"
+          # The manifest must announce Android 11 as the floor and API 36 as the target.
+          "$TC/aapt2" dump badging "$APK" | grep -qE "^(min)?[sS]dkVersion:'30'" \
+            || { echo "minSdk is not 30"; exit 1; }
+          "$TC/aapt2" dump badging "$APK" | grep -q "targetSdkVersion:'36'" \
+            || { echo "targetSdk is not 36"; exit 1; }
+          # A debuggable flag would make this a debug build, not a release one.
+          if "$TC/aapt2" dump badging "$APK" | grep -q "application-debuggable"; then
+            echo "release APK is debuggable"; exit 1
+          fi
 
-      - name: Upload signed APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v7
         with:
-          name: qin-f21-toolbox-1.0.0.apk
-          path: build/outputs/qin-f21-toolbox-1.0.0.apk
+          name: qin-f21-toolbox-1.1.0-release.apk
+          path: build/outputs/qin-f21-toolbox-1.1.0-release.apk
           if-no-files-found: error
 
   gradle-build:
-    name: Gradle build (Android SDK 30)
+    name: Gradle build (Android SDK 36)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -72,10 +83,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK (platform 30, build-tools 33.0.1)
+      - name: Set up Android SDK (platform 36, build-tools 35.0.0)
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-30 build-tools;33.0.1'
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
 
       - name: Point Gradle at the SDK
         run: |

@@ -48,17 +48,28 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
     private lateinit var resultUnit: TextView
     private lateinit var unitList: LinearLayout
     private lateinit var keypad: KeypadView
+    private lateinit var keypadToggle: android.widget.Button
     private lateinit var favouriteButton: ImageView
     private lateinit var swapButton: ImageView
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
-        val root = Widgets.column(context)
+        val root = FrameLayout(context)
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        // --- category + favourite row -------------------------------------------
+        val column = Widgets.column(context)
+        root.addView(column, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+
+        // --- category + favourite ------------------------------------------------
         val topRow = Widgets.row(context)
+        topRow.gravity = Gravity.CENTER_VERTICAL
         categorySpinner = Spinner(context)
+        categorySpinner.background = Widgets.roundedBackground(
+            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline), 12
+        )
         categorySpinner.adapter = ArrayAdapter(
             context,
             R.layout.item_spinner,
@@ -72,7 +83,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-        topRow.addView(categorySpinner, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        topRow.addView(categorySpinner, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
 
         favouriteButton = ImageView(context)
         favouriteButton.setImageResource(R.drawable.ic_star)
@@ -80,59 +91,30 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
         favouriteButton.background = Widgets.roundedBackground(
             context,
             Widgets.color(context, R.color.surface),
-            Widgets.color(context, R.color.outline)
+            Widgets.color(context, R.color.outline),
+            12
         )
+        favouriteButton.setPadding(
+            Widgets.dp(context, 11), Widgets.dp(context, 11),
+            Widgets.dp(context, 11), Widgets.dp(context, 11)
+        )
+        favouriteButton.isFocusable = true
         favouriteButton.contentDescription = context.getString(R.string.action_favourite)
         favouriteButton.setOnClickListener { toggleFavourite() }
         topRow.addView(favouriteButton, LinearLayout.LayoutParams(
-            Widgets.dp(context, 40),
-            Widgets.dp(context, 40)
-        ))
-        root.addView(topRow, LinearLayout.LayoutParams(
+            Widgets.dp(context, 44),
+            Widgets.dp(context, 44)
+        ).apply { leftMargin = Widgets.dp(context, 8) })
+        column.addView(topRow, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 10), Widgets.dp(context, 12), 0)
         })
 
-        // --- value + swap --------------------------------------------------------
-        val valueCard = Widgets.row(context)
-        valueCard.gravity = Gravity.CENTER_VERTICAL
-        valueCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 4),
-            Widgets.dp(context, 4), Widgets.dp(context, 4)
-        )
-        valueCard.background = Widgets.roundedBackground(
-            context,
-            Widgets.color(context, R.color.surface),
-            Widgets.color(context, R.color.outline)
-        )
-        valueLabel = Widgets.text(context, input, R.style.Text_Title)
-        valueLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 20f)
-        valueLabel.gravity = Gravity.CENTER_VERTICAL
-        valueLabel.maxLines = 1
-        valueLabel.ellipsize = android.text.TextUtils.TruncateAt.START
-        valueCard.addView(valueLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-
-        swapButton = ImageView(context)
-        swapButton.setImageResource(R.drawable.ic_swap)
-        swapButton.setColorFilter(Widgets.color(context, R.color.primary))
-        swapButton.background = Widgets.roundedBackground(context, Widgets.color(context, R.color.surface_alt))
-        swapButton.contentDescription = context.getString(R.string.action_swap)
-        swapButton.setOnClickListener { swapUnits() }
-        valueCard.addView(swapButton, LinearLayout.LayoutParams(
-            Widgets.dp(context, 32),
-            Widgets.dp(context, 32)
-        ))
-        root.addView(valueCard, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
-        })
-
-        // --- unit pickers --------------------------------------------------------
+        // --- unit pickers ---------------------------------------------------------
         val unitRow = Widgets.row(context)
+        unitRow.gravity = Gravity.CENTER_VERTICAL
         fromSpinner = unitSpinner()
         toSpinner = unitSpinner()
         fromSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -157,59 +139,115 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-        unitRow.addView(fromSpinner, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        unitRow.addView(fromSpinner, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
         val arrow = TextView(context)
         arrow.text = "→"
         arrow.setTextAppearance(context, R.style.Text_Subtitle)
         arrow.setTextColor(Widgets.color(context, R.color.text_muted))
         arrow.gravity = Gravity.CENTER
-        unitRow.addView(arrow, LinearLayout.LayoutParams(Widgets.dp(context, 22), ViewGroup.LayoutParams.WRAP_CONTENT))
-        unitRow.addView(toSpinner, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        root.addView(unitRow, LinearLayout.LayoutParams(
+        unitRow.addView(arrow, LinearLayout.LayoutParams(Widgets.dp(context, 28), ViewGroup.LayoutParams.WRAP_CONTENT))
+        unitRow.addView(toSpinner, LinearLayout.LayoutParams(0, Widgets.dp(context, 44), 1f))
+        column.addView(unitRow, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0)
         })
 
-        // --- result --------------------------------------------------------------
-        val resultCard = Widgets.row(context)
-        resultCard.gravity = Gravity.CENTER_VERTICAL
-        resultCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 6),
-            Widgets.dp(context, 12), Widgets.dp(context, 6)
+        // --- reading: input and result on one card --------------------------------
+        val card = Widgets.column(context)
+        card.setPadding(
+            Widgets.dp(context, 14), Widgets.dp(context, 10),
+            Widgets.dp(context, 14), Widgets.dp(context, 10)
         )
-        resultCard.background = Widgets.roundedBackground(
-            context,
-            Widgets.color(context, R.color.primary_dim),
-            Widgets.color(context, R.color.primary)
+        card.background = Widgets.roundedBackground(
+            context, Widgets.color(context, R.color.surface_sunken), Widgets.color(context, R.color.outline), 16
         )
-        resultLabel = Widgets.text(context, "", R.style.Text_Display)
-        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 26f)
-        resultLabel.maxLines = 1
-        resultLabel.ellipsize = android.text.TextUtils.TruncateAt.START
-        resultLabel.setTextColor(Widgets.color(context, R.color.primary))
-        resultCard.addView(resultLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+
+        val valueRow = Widgets.row(context)
+        valueRow.gravity = Gravity.CENTER_VERTICAL
+        valueRow.addView(Widgets.eyebrow(context, context.getString(R.string.converter_value)),
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        swapButton = ImageView(context)
+        swapButton.setImageResource(R.drawable.ic_swap)
+        swapButton.setColorFilter(Widgets.color(context, R.color.primary))
+        swapButton.background = Widgets.roundedBackground(
+            context, Widgets.color(context, R.color.surface_high), 0, 10
+        )
+        swapButton.setPadding(
+            Widgets.dp(context, 8), Widgets.dp(context, 8),
+            Widgets.dp(context, 8), Widgets.dp(context, 8)
+        )
+        swapButton.isFocusable = true
+        swapButton.contentDescription = context.getString(R.string.action_swap)
+        swapButton.setOnClickListener { swapUnits() }
+        valueRow.addView(swapButton, LinearLayout.LayoutParams(
+            Widgets.dp(context, 32), Widgets.dp(context, 32)
+        ))
+        card.addView(valueRow)
+
+        valueLabel = Widgets.text(context, input, R.style.Text_Mono)
+        valueLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 22f)
+        valueLabel.maxLines = 1
+        valueLabel.ellipsize = android.text.TextUtils.TruncateAt.START
+        valueLabel.setPadding(0, Widgets.dp(context, 4), 0, 0)
+        card.addView(valueLabel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
+
+        val rule = View(context)
+        rule.setBackgroundColor(Widgets.color(context, R.color.outline))
+        card.addView(rule, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, Widgets.dp(context, 1)
+        ).apply { setMargins(0, Widgets.dp(context, 8), 0, Widgets.dp(context, 8)) })
+
+        val resultTop = Widgets.row(context)
+        resultTop.gravity = Gravity.CENTER_VERTICAL
+        val resultEyebrow = Widgets.eyebrow(context, context.getString(R.string.converter_result))
+        resultEyebrow.setTextColor(Widgets.color(context, R.color.primary))
+        resultTop.addView(resultEyebrow, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         resultUnit = Widgets.text(context, "", R.style.Text_Label)
         resultUnit.setTextColor(Widgets.color(context, R.color.text_secondary))
         resultUnit.gravity = Gravity.END
-        resultUnit.maxLines = 2
-        resultCard.addView(resultUnit)
-        root.addView(resultCard, LinearLayout.LayoutParams(
+        resultUnit.maxLines = 1
+        resultTop.addView(resultUnit)
+        card.addView(resultTop)
+
+        resultLabel = Widgets.text(context, "", R.style.Text_Display)
+        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
+        resultLabel.maxLines = 1
+        resultLabel.ellipsize = android.text.TextUtils.TruncateAt.START
+        resultLabel.setTextColor(Widgets.color(context, R.color.primary))
+        resultLabel.setPadding(0, Widgets.dp(context, 2), 0, 0)
+        card.addView(resultLabel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
+
+        column.addView(card, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0)
         })
 
-        // --- all units -----------------------------------------------------------
+        // --- list header + keypad toggle ------------------------------------------
+        val toolbar = Widgets.row(context)
+        toolbar.gravity = Gravity.CENTER_VERTICAL
         fromLabel = Widgets.caption(context, "")
-        root.addView(fromLabel, LinearLayout.LayoutParams(
+        fromLabel.maxLines = 1
+        toolbar.addView(fromLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        keypadToggle = Widgets.chip(context, context.getString(R.string.converter_keypad)) { toggleKeypad() }
+        toolbar.addView(keypadToggle, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, Widgets.dp(context, 32)
+        ).apply { leftMargin = Widgets.dp(context, 8) })
+        column.addView(toolbar, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 6), Widgets.dp(context, 12), 0)
+            setMargins(Widgets.dp(context, 16), Widgets.dp(context, 12), Widgets.dp(context, 12), Widgets.dp(context, 4))
         })
+
+        // --- all units ------------------------------------------------------------
         val listScroll = ScrollView(context).forKeypad()
         listScroll.isVerticalScrollBarEnabled = false
         unitList = Widgets.column(context)
@@ -217,15 +255,15 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ))
-        root.addView(listScroll, LinearLayout.LayoutParams(
+        column.addView(listScroll, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             0,
             1f
         ).apply {
-            setMargins(Widgets.dp(context, 8), 0, Widgets.dp(context, 8), 0)
+            setMargins(Widgets.dp(context, 12), 0, Widgets.dp(context, 12), Widgets.dp(context, 12))
         })
 
-        // --- keypad ---------------------------------------------------------------
+        // --- keypad: an overlay, so opening it never squeezes the list -------------
         keypad = KeypadView(
             context,
             arrayOf(
@@ -235,17 +273,33 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
                 arrayOf("0", "00", ".", "±")
             )
         ) { key -> onKeypadKey(key) }
-        keypad.visibility = View.VISIBLE
-        root.addView(keypad, LinearLayout.LayoutParams(
+        keypad.setBackgroundColor(Widgets.color(context, R.color.bg))
+        keypad.visibility = View.GONE
+        root.addView(keypad, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            Widgets.dp(context, 120)
+            Widgets.dp(context, 152),
+            Gravity.BOTTOM
         ).apply {
-            setMargins(Widgets.dp(context, 4), 0, Widgets.dp(context, 4), Widgets.dp(context, 4))
+            setMargins(Widgets.dp(context, 8), 0, Widgets.dp(context, 8), Widgets.dp(context, 8))
         })
 
         updateSpinners()
         update()
         return root
+    }
+
+    /** Shows or hides the on-screen keypad and keeps the chip label in sync. */
+    private fun toggleKeypad() {
+        val visible = keypad.visibility != View.VISIBLE
+        keypad.visibility = if (visible) View.VISIBLE else View.GONE
+        keypadToggle.isSelected = visible
+        keypadToggle.setTextColor(
+            Widgets.color(host.activity, if (visible) R.color.on_primary else R.color.text_secondary)
+        )
+        keypadToggle.background = host.activity.getDrawable(
+            if (visible) R.drawable.bg_key_accent else R.drawable.bg_chip
+        )
+        if (visible) keypad.requestFocus()
     }
 
     private fun unitSpinner(): Spinner {
@@ -260,7 +314,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
             host.activity,
             R.layout.item_spinner,
             R.id.text1,
-            category.units.map { "${it.name} (${it.symbol})" }
+            category.units.map { it.name }
         )
         return spinner
     }
@@ -279,7 +333,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
     }
 
     private fun updateSpinners() {
-        val names = category.units.map { "${it.name} (${it.symbol})" }
+        val names = category.units.map { it.name }
         fromSpinner.adapter = ArrayAdapter(host.activity, R.layout.item_spinner, R.id.text1, names)
         toSpinner.adapter = ArrayAdapter(host.activity, R.layout.item_spinner, R.id.text1, names)
         fromSpinner.setSelection(category.units.indexOfFirst { it.id == fromUnit.id }.coerceAtLeast(0))
@@ -323,7 +377,7 @@ class ConverterScreen(host: ScreenHost) : Screen(host) {
         val result = Toolbox.engine.convert(value, fromUnit, toUnit)
         lastResult = result
         resultLabel.text = Numbers.format(result)
-        resultUnit.text = toUnit.name + "\n" + toUnit.symbol
+        resultUnit.text = toUnit.name + " (" + toUnit.symbol + ")"
         fromLabel.text = host.activity.getString(
             R.string.converter_all_units,
             fromUnit.name,

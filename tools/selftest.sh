@@ -16,8 +16,12 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 KOTLINC="$TC/kotlinc/bin/kotlinc"
 KOTLIN_STDLIB="$TC/kotlinc/lib/kotlin-stdlib.jar"
+# The platform stub to compile against: the newest one the tool-chain has, i.e. the same
+# API level tools/build-offline.sh compiles the app with. Only the signatures are used -
+# none of the framework code is executed by the checks.
+ANDROID_JAR="$(ls -1 "$TC"/android-*/android.jar 2>/dev/null | sort -V | tail -1)"
 
-for tool in "$KOTLINC" "$KOTLIN_STDLIB"; do
+for tool in "$KOTLINC" "$KOTLIN_STDLIB" "$ANDROID_JAR"; do
   [ -e "$tool" ] || { echo "missing tool-chain file '$tool'"; exit 1; }
 done
 
@@ -32,7 +36,7 @@ find "$ROOT/core/common/src/main/kotlin" \
      "$ROOT/tools/selftest" -name "*.kt" > "$OUT/sources.txt"
 
 # core/data is compiled against the platform stubs, only the pure parts are executed
-"$KOTLINC" -classpath "$TC/android-30/android.jar" -jvm-target 1.8 -nowarn \
+"$KOTLINC" -classpath "$ANDROID_JAR" -jvm-target 1.8 -nowarn \
   -d "$OUT/classes" @"$OUT/sources.txt"
 
 echo "[selftest] running the checks"

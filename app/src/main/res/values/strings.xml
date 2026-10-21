@@ -7,6 +7,9 @@
     <string name="no">No</string>
 
     <!-- ==================== Home ==================== -->
+    <string name="home_title">Toolbox</string>
+    <string name="home_subtitle">%1$d tools · offline</string>
+    <string name="section_quick">Quick access</string>
     <string name="search_hint">Search tools</string>
     <string name="search_empty">No tool matches that search.</string>
     <string name="search_results">Results (%1$d)</string>
@@ -17,6 +20,7 @@
 
     <!-- ==================== Actions ==================== -->
     <string name="action_calculate">Calculate</string>
+    <string name="form_result">Result</string>
     <string name="action_clear">Clear</string>
     <string name="action_copy">Copy</string>
     <string name="action_export">Export</string>
@@ -47,6 +51,13 @@
     <string name="error_invalid_number">Please enter a number for %1$s</string>
 
     <!-- ==================== Converter ==================== -->
+    <string name="currency_amount">Amount</string>
+    <string name="gps_position">Position</string>
+    <string name="recorder_duration">Recording</string>
+    <string name="dc_difference_label">Difference</string>
+    <string name="converter_value">Value</string>
+    <string name="converter_keypad">Keypad</string>
+    <string name="converter_result">Result</string>
     <string name="converter_all_units">%1$s in all %2$d units</string>
     <string name="currency_offline_note">Offline reference rates bundled with the app (%1$s). No network is used; edit the rates in Settings.</string>
     <string name="currency_offline_short">Bundled offline rates</string>
@@ -101,14 +112,18 @@
     <string name="stopwatch_ready">Ready</string>
     <string name="stopwatch_running">Running</string>
     <string name="stopwatch_paused">Paused</string>
+    <string name="stopwatch_elapsed">Elapsed</string>
     <string name="stopwatch_laps">Lap times</string>
     <string name="stopwatch_no_laps">No lap times yet.</string>
     <string name="timer_ready">Ready</string>
     <string name="timer_running">Counting down</string>
     <string name="timer_paused">Paused</string>
     <string name="timer_finished">Time is up</string>
+    <string name="timer_remaining">Remaining</string>
     <string name="timer_set_duration">Set a duration first.</string>
     <string name="timer_channel">Timer alerts</string>
+    <string name="timer_channel_description">Vibration and a notification when a countdown ends.</string>
+    <string name="timer_notifications_blocked">Notifications are not allowed, so the timer will only vibrate.</string>
     <string name="timer_notification_title">Timer finished</string>
     <string name="timer_notification_text">The countdown has ended.</string>
 
@@ -133,6 +148,7 @@
     <string name="ir_status_missing">Infrared emitter not detected on this device.</string>
 
     <!-- ==================== Sound meter ==================== -->
+    <string name="sound_level">Level</string>
     <string name="sound_idle">Waiting for the microphone</string>
     <string name="sound_detail">dBFS %1$.1f · RMS %2$.0f%% · peak %3$.0f%%</string>
     <string name="sound_spectrum">Spectrum</string>
@@ -161,6 +177,7 @@
     <string name="camera_unavailable_title">Camera not available</string>
     <string name="camera_storage_note">Photos are stored in the app folder on the device and are never uploaded.</string>
     <string name="scanner_empty">Nothing scanned yet.</string>
+    <string name="scanner_last">Last code</string>
     <string name="scanner_start">Open scanner</string>
     <string name="scanner_format">Format: %1$s</string>
     <string name="scanner_copied">Copied to the clipboard.</string>

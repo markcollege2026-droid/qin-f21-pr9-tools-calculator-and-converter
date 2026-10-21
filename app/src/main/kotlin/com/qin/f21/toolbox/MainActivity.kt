@@ -8,9 +8,11 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import android.window.OnBackInvokedDispatcher
 import com.qin.f21.toolbox.core.hardware.HardwareCapabilities
 import com.qin.f21.toolbox.ui.HomeScreen
 import com.qin.f21.toolbox.ui.Screen
@@ -43,9 +45,61 @@ class MainActivity : Activity(), ScreenHost {
         backView = findViewById(R.id.btn_back)
         headerIcon = findViewById(R.id.header_icon)
         backView.setOnClickListener { pop() }
+        applyWindowInsets()
+        registerBackHandler()
         if (savedInstanceState == null) {
             push(HomeScreen(this))
         }
+    }
+
+    /**
+     * Draws edge to edge and applies the system bar insets itself.
+     *
+     * Android 15 (API 35) draws every app edge to edge whether it asks or not, and with a
+     * targetSdk of 36 the old `fitsSystemWindows` shortcut no longer lines the content up
+     * with the status and navigation bars. Since the app owns the whole window, the root
+     * container takes the insets as padding: on Android 11-14 that reproduces exactly what
+     * fitsSystemWindows did, and on 15+ it keeps the 4:3 layout off the system bars.
+     */
+    private fun applyWindowInsets() {
+        window.setDecorFitsSystemWindows(false)
+        val root = findViewById<View>(R.id.root)
+        root.setOnApplyWindowInsetsListener { view, insets ->
+            val bars = insets.getInsets(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            )
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
+        root.requestApplyInsets()
+    }
+
+    /**
+     * Predictive back (Android 13+, enforced when targeting 36).
+     *
+     * From targetSdk 33 the system may deliver Back through the back dispatcher instead of
+     * KEYCODE_BACK, and from 36 the legacy opt-out is ignored. The callback runs the same
+     * code as the hardware key, so the internal screen stack - not the activity - decides
+     * what Back does on every Android release from 11 to 16.
+     */
+    private fun registerBackHandler() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        onBackInvokedDispatcher.registerOnBackInvokedCallback(
+            OnBackInvokedDispatcher.PRIORITY_DEFAULT
+        ) {
+            if (!handleBack()) finish()
+        }
+    }
+
+    /** @return true when a screen (or the screen stack) consumed Back. */
+    private fun handleBack(): Boolean {
+        val screen = stack.lastOrNull()
+        if (screen?.onBackPressed() == true) return true
+        if (stack.size > 1) {
+            pop()
+            return true
+        }
+        return false
     }
 
     // ---- ScreenHost -----------------------------------------------------------
@@ -112,6 +166,7 @@ class MainActivity : Activity(), ScreenHost {
         if (icon != null) {
             headerIcon.visibility = View.VISIBLE
             headerIcon.setImageResource(iconRes(icon))
+            headerIcon.setColorFilter(getColor(R.color.text_muted))
         } else {
             headerIcon.visibility = View.GONE
         }
@@ -148,7 +203,9 @@ class MainActivity : Activity(), ScreenHost {
             if (screen.onKeyDown(keyCode, event)) return true
         }
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (screen?.onBackPressed() == true) return true
+            // The physical back key of the Qin F21 Pro arrives here; the back gesture on
+            // Android 13+ arrives through the OnBackInvokedCallback registered above.
+            if (handleBack()) return true
             pop()
             return true
         }

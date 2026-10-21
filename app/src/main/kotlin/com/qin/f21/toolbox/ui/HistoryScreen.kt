@@ -14,6 +14,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import com.qin.f21.toolbox.R
 import com.qin.f21.toolbox.Toolbox
+import com.qin.f21.toolbox.Tools
 import com.qin.f21.toolbox.core.common.JsonWriter
 import com.qin.f21.toolbox.core.data.HistoryEntry
 import java.io.File
@@ -41,11 +42,11 @@ class HistoryScreen(host: ScreenHost) : Screen(host) {
         val exportJson = Widgets.button(context, context.getString(R.string.action_export_json), secondary = true)
         exportJson.setOnClickListener { export("json") }
         actions.addView(exportJson, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        actions.addView(Widgets.spacer(context, 6))
+        actions.addView(Widgets.spacer(context, 8))
         val exportCsv = Widgets.button(context, context.getString(R.string.action_export_csv), secondary = true)
         exportCsv.setOnClickListener { export("csv") }
         actions.addView(exportCsv, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        actions.addView(Widgets.spacer(context, 6))
+        actions.addView(Widgets.spacer(context, 8))
         val clear = Widgets.button(context, context.getString(R.string.action_clear), secondary = true)
         clear.setOnClickListener {
             Toolbox.store.clearHistory()
@@ -55,13 +56,13 @@ class HistoryScreen(host: ScreenHost) : Screen(host) {
         actions.addView(clear, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         root.addView(actions, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 12), Widgets.dp(context, 12), 0) })
 
         val scroll = ScrollView(context).forKeypad()
         column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 8), Widgets.dp(context, 4),
-            Widgets.dp(context, 8), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
         scroll.addView(column, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -78,42 +79,23 @@ class HistoryScreen(host: ScreenHost) : Screen(host) {
         column.removeAllViews()
         val entries = Toolbox.store.history
         if (entries.isEmpty()) {
-            val empty = Widgets.column(context)
-            empty.gravity = Gravity.CENTER
-            val text = Widgets.text(context, context.getString(R.string.history_empty), R.style.Text_Caption)
-            text.gravity = Gravity.CENTER
-            text.setPadding(0, Widgets.dp(context, 40), 0, Widgets.dp(context, 40))
-            empty.addView(text)
-            column.addView(empty)
+            column.addView(Widgets.emptyState(context, context.getString(R.string.history_empty)))
             return
         }
         val formatter = SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault())
         for (entry in entries) {
-            val row = Widgets.row(context)
-            row.gravity = Gravity.CENTER_VERTICAL
-            row.setPadding(
-                Widgets.dp(context, 10), Widgets.dp(context, 8),
-                Widgets.dp(context, 10), Widgets.dp(context, 8)
-            )
-            row.background = Widgets.focusBackground(
-                context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-            )
-            row.isFocusable = true
-            row.isClickable = true
-            val textColumn = Widgets.column(context)
-            val title = Widgets.text(context, entry.title, R.style.Text_Body)
-            textColumn.addView(title)
-            val summary = Widgets.text(context, entry.summary, R.style.Text_Caption)
-            summary.maxLines = 2
-            textColumn.addView(summary)
-            val stamp = Widgets.text(context, formatter.format(Date(entry.timestamp)), R.style.Text_Caption)
-            textColumn.addView(stamp)
-            row.addView(textColumn, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.setOnClickListener { copy(entry) }
+            val icon = Tools.byId(entry.toolId)?.icon ?: R.drawable.ic_history
+            val row = Widgets.listRow(
+                context,
+                entry.title,
+                "${entry.summary}\n${formatter.format(Date(entry.timestamp))}",
+                iconRes = icon,
+                iconTint = R.color.text_secondary
+            ) { copy(entry) }
             val params = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            params.bottomMargin = Widgets.dp(context, 5)
+            params.bottomMargin = Widgets.dp(context, 8)
             row.layoutParams = params
             column.addView(row)
         }

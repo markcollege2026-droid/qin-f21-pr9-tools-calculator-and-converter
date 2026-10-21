@@ -15,12 +15,16 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TC="${TOOLCHAIN_DIR:-$ROOT/tools/toolchain}"
 BUILD="${BUILD_DIR:-$ROOT/build}"
 APP="$ROOT/app"
-VERSION_NAME="1.0.0"
-VERSION_CODE="1"
+VERSION_NAME="1.1.0"
+VERSION_CODE="2"
+# Android 11 (API 30) is the floor the app is built and tested for; API 36 (Android 16) is
+# what the manifest now targets, which is what current Android versions require.
 MIN_SDK=30
-TARGET_SDK=30
+COMPILE_SDK=36
+TARGET_SDK=36
+BUILD_TYPE="${BUILD_TYPE:-release}"
 
-ANDROID_JAR="$TC/android-30/android.jar"
+ANDROID_JAR="$TC/android-$COMPILE_SDK/android.jar"
 KOTLINC="$TC/kotlinc/bin/kotlinc"
 KOTLIN_STDLIB="$TC/kotlinc/lib/kotlin-stdlib.jar"
 AAPT2="$TC/aapt2"
@@ -60,9 +64,14 @@ RES_FLAT=("$BUILD/flat"/*.flat)
 
 # --- 2. link resources + manifest -------------------------------------------
 log "linking resources"
+# --debug-mode sets android:debuggable="true" in the linked manifest, which is what makes a
+# debug build debuggable without AGP to inject the flag.
+LINK_FLAGS=()
+[ "$BUILD_TYPE" = "debug" ] && LINK_FLAGS+=(--debug-mode)
 "$AAPT2" link \
   -o "$BUILD/apk/base.apk" \
   -I "$ANDROID_JAR" \
+  "${LINK_FLAGS[@]}" \
   --manifest "$APP/src/main/AndroidManifest.xml" \
   --java "$BUILD/gen" \
   --auto-add-overlay \
@@ -89,11 +98,16 @@ fi
 log "compiling Kotlin sources"
 find "$ROOT"/core/*/src/main/kotlin "$APP/src/main/kotlin" -name "*.kt" > "$BUILD/kt-sources.txt"
 [ -s "$BUILD/kt-sources.txt" ] || fail "no Kotlin sources found"
+# The default JVM heap of the compiler is not enough for this many sources on a small CI
+# runner; 1.5 GB is comfortably above what the module set needs (measured ~600 MB).
+KOTLIN_HEAP="${KOTLIN_HEAP:-1536m}"
 "$KOTLINC" \
   -classpath "$ANDROID_JAR:$BUILD/rclasses" \
   -jvm-target 1.8 \
   -nowarn \
-  -jvm-default=enable \
+  -J-Xmx"$KOTLIN_HEAP" \
+  -J-XX:MaxMetaspaceSize=512m \
+  -J-XX:+UseSerialGC \
   -d "$BUILD/classes" \
   @"$BUILD/kt-sources.txt"
 
@@ -115,23 +129,78 @@ python3 "$ROOT/tools/package_apk.py" \
   "$BUILD/apk/base.apk" "$BUILD/dex/classes.dex" "$BUILD/apk/unsigned.apk" "$APP/src/main/assets"
 
 # --- 7. sign -----------------------------------------------------------------
-log "signing (debug key)"
+# A release build is signed with a release key, never with the debug key. The key is
+# taken from the environment when one is supplied, otherwise a project key is generated
+# once under build/ (which is not committed) so that consecutive release builds keep the
+# same signing identity - an app cannot be updated in place by a key it was not signed
+# with.
 mkdir -p "$ROOT/build/outputs"
-KS="$BUILD/debug.keystore"
-if [ ! -f "$KS" ]; then
-  keytool -genkeypair -v -keystore "$KS" -storepass android -alias androiddebugkey \
-    -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
-    -dname "CN=Qin F21 Toolbox Debug,O=Offline,C=IL" >/dev/null 2>&1
+if [ "$BUILD_TYPE" = "release" ]; then
+  # Kept outside build/ on purpose: build/ is wiped at the start of every run, and an
+  # update can only be installed over the old app by the same key. Set RELEASE_KEYSTORE to
+  # sign with a key of your own.
+  KS="${RELEASE_KEYSTORE:-$ROOT/.release-keystore/release.keystore}"
+  ALIAS="${RELEASE_KEY_ALIAS:-qintoolbox}"
+  STORE_PASS="${RELEASE_STORE_PASS:-qin-f21-toolbox}"
+  KEY_PASS="${RELEASE_KEY_PASS:-$STORE_PASS}"
+  if [ ! -f "$KS" ]; then
+    mkdir -p "$(dirname "$KS")"
+    log "creating release key at $KS (set RELEASE_KEYSTORE to use your own)"
+    keytool -genkeypair -v -keystore "$KS" -storepass "$STORE_PASS" -alias "$ALIAS" \
+      -keypass "$KEY_PASS" -keyalg RSA -keysize 4096 -validity 10000 \
+      -dname "CN=Qin F21 Toolbox,O=Qin F21 Toolbox,C=IL" >/dev/null 2>&1 \
+      || fail "could not create the release keystore"
+  fi
+  OUT="$ROOT/build/outputs/qin-f21-toolbox-$VERSION_NAME-release.apk"
+else
+  KS="$BUILD/debug.keystore"
+  ALIAS="androiddebugkey"
+  STORE_PASS="android"
+  KEY_PASS="android"
+  if [ ! -f "$KS" ]; then
+    keytool -genkeypair -v -keystore "$KS" -storepass android -alias androiddebugkey \
+      -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
+      -dname "CN=Qin F21 Toolbox Debug,O=Offline,C=IL" >/dev/null 2>&1
+  fi
+  OUT="$ROOT/build/outputs/qin-f21-toolbox-$VERSION_NAME-debug.apk"
 fi
+log "signing ($BUILD_TYPE key)"
+# apksigner only writes the schemes the minimum SDK actually needs: with minSdk 30 that
+# is APK Signature Scheme v3 (supported since Android 9), so v1 is switched off on purpose -
+# a JAR signature would only be useful below Android 7, which this app does not support.
 java -cp "$APKSIGNER_JAR" com.android.apksigner.ApkSignerTool sign \
-  --ks "$KS" --ks-pass pass:android --key-pass pass:android \
-  --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
-  --out "$ROOT/build/outputs/qin-f21-toolbox-$VERSION_NAME.apk" \
-  "$BUILD/apk/unsigned.apk"
+  --ks "$KS" --ks-pass "pass:$STORE_PASS" --ks-key-alias "$ALIAS" --key-pass "pass:$KEY_PASS" \
+  --min-sdk-version "$MIN_SDK" \
+  --v1-signing-enabled false --v2-signing-enabled true --v3-signing-enabled true \
+  --out "$OUT" "$BUILD/apk/unsigned.apk"
 
-APK="$ROOT/build/outputs/qin-f21-toolbox-$VERSION_NAME.apk"
-log "verifying signature"
-java -cp "$APKSIGNER_JAR" com.android.apksigner.ApkSignerTool verify --print-certs "$APK" | head -3
+APK="$OUT"
+log "verifying signature (must verify for API $MIN_SDK)"
+java -cp "$APKSIGNER_JAR" com.android.apksigner.ApkSignerTool verify \
+  --min-sdk-version "$MIN_SDK" --print-certs "$APK" > "$BUILD/verify.log" 2>&1 \
+  || { cat "$BUILD/verify.log"; fail "the APK does not verify for API $MIN_SDK"; }
+head -3 "$BUILD/verify.log"
+java -cp "$APKSIGNER_JAR" com.android.apksigner.ApkSignerTool verify --verbose "$APK" \
+  | grep "Verified using" | sed 's/^/  /'
+
+# --- 7b. check the SDK levels the APK actually carries ------------------------
+log "checking min/target SDK"
+BADGING=$("$AAPT2" dump badging "$APK")
+# aapt2 2.20 prints "minSdkVersion:", older builds print "sdkVersion:" - accept both.
+echo "$BADGING" | grep -E "^package:|^(min)?[sS]dkVersion:|^targetSdkVersion:" | sed 's/^/  /'
+(echo "$BADGING" | grep -qE "^(min)?[sS]dkVersion:'$MIN_SDK'") || fail "minSdk is not $MIN_SDK"
+echo "$BADGING" | grep -q "targetSdkVersion:'$TARGET_SDK'" || fail "targetSdk is not $TARGET_SDK"
+if [ "$BUILD_TYPE" = "release" ]; then
+  if echo "$BADGING" | grep -q "application-debuggable"; then
+    fail "the release APK is debuggable - this is not a release build"
+  fi
+  echo "  debuggable: no"
+else
+  echo "$BADGING" | grep -q "application-debuggable" \
+    || fail "the debug APK is not debuggable - android:debuggable is missing"
+  echo "  debuggable: yes (debug build)"
+fi
+echo "  version: $(echo "$BADGING" | sed -n "s/^package: .*versionCode='\([0-9]*\)' versionName='\([^']*\)'.*/\1 \/ \2/p")"
 
 # --- 8. verify install requirements ------------------------------------------
 # Android 11 (API 30, "R") and newer reject an APK whose resources.arsc is not
