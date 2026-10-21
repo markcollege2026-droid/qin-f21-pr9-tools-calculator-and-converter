@@ -48,8 +48,8 @@ class FormScreen(
         val scroll = ScrollView(context).forKeypad()
         val column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 8),
-            Widgets.dp(context, 10), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 16)
         )
 
         val descriptionView = Widgets.caption(context, description)
@@ -61,16 +61,14 @@ class FormScreen(
             column.addView(fieldRow(field))
         }
 
-        val resultCard = Widgets.column(context)
-        resultCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 10),
-            Widgets.dp(context, 12), Widgets.dp(context, 10)
-        )
-        resultCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary)
-        )
+        val resultCard = Widgets.resultCard(context)
+        val resultEyebrow = Widgets.eyebrow(context, context.getString(R.string.form_result))
+        resultEyebrow.setTextColor(Widgets.color(context, R.color.primary))
+        resultCard.addView(resultEyebrow)
         resultLabel = Widgets.text(context, "—", R.style.Text_Display)
+        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 30f)
         resultLabel.maxLines = 3
+        resultLabel.setPadding(0, Widgets.dp(context, 2), 0, 0)
         resultCard.addView(resultLabel)
         errorLabel = Widgets.text(context, "", R.style.Text_Caption)
         errorLabel.setTextColor(Widgets.color(context, R.color.danger))
@@ -78,7 +76,7 @@ class FormScreen(
         val cardParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        cardParams.topMargin = Widgets.dp(context, 10)
+        cardParams.topMargin = Widgets.dp(context, 16)
         resultCard.layoutParams = cardParams
         column.addView(resultCard)
 
@@ -107,7 +105,7 @@ class FormScreen(
         root.addView(actions, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            setMargins(Widgets.dp(context, 10), 0, Widgets.dp(context, 10), Widgets.dp(context, 10))
+            setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), Widgets.dp(context, 12))
         })
 
         calculate()
@@ -133,7 +131,7 @@ class FormScreen(
             if (!hasFocus) calculate()
         }
         inputs[field.id] = edit
-        val width = if (field.unit.isEmpty()) 120 else 100
+        val width = if (field.unit.isEmpty()) 124 else 100
         row.addView(edit, LinearLayout.LayoutParams(
             Widgets.dp(context, width), ViewGroup.LayoutParams.WRAP_CONTENT
         ))
@@ -146,7 +144,7 @@ class FormScreen(
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        params.topMargin = Widgets.dp(context, 6)
+        params.topMargin = Widgets.dp(context, 8)
         row.layoutParams = params
         return row
     }

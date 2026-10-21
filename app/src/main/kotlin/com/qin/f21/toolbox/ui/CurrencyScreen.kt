@@ -50,25 +50,29 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
         val root = Widgets.column(context)
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        amountLabel = Widgets.text(context, input, R.style.Text_Title)
-        amountLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 20f)
-        amountLabel.gravity = Gravity.CENTER_VERTICAL
-        val amountCard = Widgets.row(context)
-        amountCard.gravity = Gravity.CENTER_VERTICAL
+        val amountCard = Widgets.column(context)
         amountCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 5),
-            Widgets.dp(context, 12), Widgets.dp(context, 5)
+            Widgets.dp(context, 14), Widgets.dp(context, 10),
+            Widgets.dp(context, 14), Widgets.dp(context, 10)
         )
         amountCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface_sunken), Widgets.color(context, R.color.outline), 16
         )
-        amountCard.addView(amountLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        amountCard.addView(Widgets.eyebrow(context, context.getString(R.string.currency_amount)))
+        val amountRow = Widgets.row(context)
+        amountRow.gravity = Gravity.CENTER_VERTICAL
+        amountLabel = Widgets.text(context, input, R.style.Text_Mono)
+        amountLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 22f)
+        amountLabel.gravity = Gravity.CENTER_VERTICAL
+        amountLabel.setPadding(0, Widgets.dp(context, 4), 0, 0)
+        amountRow.addView(amountLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         amountUnitLabel = Widgets.text(context, from, R.style.Text_Subtitle)
         amountUnitLabel.setTextColor(Widgets.color(context, R.color.text_secondary))
-        amountCard.addView(amountUnitLabel)
+        amountRow.addView(amountUnitLabel)
+        amountCard.addView(amountRow)
         root.addView(amountCard, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 10), Widgets.dp(context, 12), 0) })
 
         val unitRow = Widgets.row(context)
         fromSpinner = spinner()
@@ -97,26 +101,34 @@ class CurrencyScreen(host: ScreenHost) : Screen(host) {
         unitRow.addView(toSpinner, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         root.addView(unitRow, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0) })
 
-        val resultCard = Widgets.row(context)
-        resultCard.gravity = Gravity.CENTER_VERTICAL
+        val resultCard = Widgets.column(context)
         resultCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 7),
-            Widgets.dp(context, 12), Widgets.dp(context, 7)
+            Widgets.dp(context, 14), Widgets.dp(context, 10),
+            Widgets.dp(context, 14), Widgets.dp(context, 10)
         )
         resultCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary)
+            context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary), 16
         )
+        val resultEyebrow = Widgets.eyebrow(context, context.getString(R.string.converter_result))
+        resultEyebrow.setTextColor(Widgets.color(context, R.color.primary))
+        resultCard.addView(resultEyebrow)
+        val resultRow = Widgets.row(context)
+        resultRow.gravity = Gravity.CENTER_VERTICAL
         resultLabel = Widgets.text(context, "", R.style.Text_Display)
-        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 26f)
+        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 30f)
         resultLabel.maxLines = 1
         resultLabel.ellipsize = android.text.TextUtils.TruncateAt.START
-        resultCard.addView(resultLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        resultLabel.setPadding(0, Widgets.dp(context, 2), 0, 0)
+        resultRow.addView(resultLabel, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         resultUnit = Widgets.text(context, "", R.style.Text_Label)
         resultUnit.setTextColor(Widgets.color(context, R.color.text_secondary))
         resultUnit.gravity = Gravity.END
-        resultCard.addView(resultUnit)
+        resultRow.addView(resultUnit, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { leftMargin = Widgets.dp(context, 8) })
+        resultCard.addView(resultRow)
         root.addView(resultCard, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })

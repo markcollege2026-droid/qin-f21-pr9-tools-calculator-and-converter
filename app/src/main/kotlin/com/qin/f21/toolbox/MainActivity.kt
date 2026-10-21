@@ -112,6 +112,7 @@ class MainActivity : Activity(), ScreenHost {
         if (icon != null) {
             headerIcon.visibility = View.VISIBLE
             headerIcon.setImageResource(iconRes(icon))
+            headerIcon.setColorFilter(getColor(R.color.text_muted))
         } else {
             headerIcon.visibility = View.GONE
         }

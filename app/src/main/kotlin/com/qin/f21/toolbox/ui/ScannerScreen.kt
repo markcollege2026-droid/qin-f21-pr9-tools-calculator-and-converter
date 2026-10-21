@@ -39,19 +39,16 @@ class ScannerScreen(host: ScreenHost) : Screen(host) {
         val scroll = ScrollView(context).forKeypad()
         val column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 8),
-            Widgets.dp(context, 10), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
 
-        val card = Widgets.column(context)
-        card.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 12),
-            Widgets.dp(context, 12), Widgets.dp(context, 12)
-        )
-        card.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
-        resultLabel = Widgets.text(context, context.getString(R.string.scanner_empty), R.style.Text_Body)
+        val card = Widgets.displayCard(context, 14)
+        card.addView(Widgets.eyebrow(context, context.getString(R.string.scanner_last)))
+        resultLabel = Widgets.text(context, context.getString(R.string.scanner_empty), R.style.Text_Mono)
+        resultLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
+        resultLabel.setTextColor(Widgets.color(context, R.color.primary))
+        resultLabel.setPadding(0, Widgets.dp(context, 6), 0, 0)
         resultLabel.setTextIsSelectable(true)
         card.addView(resultLabel)
         formatLabel = Widgets.caption(context, "")
@@ -66,7 +63,9 @@ class ScannerScreen(host: ScreenHost) : Screen(host) {
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = Widgets.dp(context, 8) })
 
-        column.addView(Widgets.caption(context, context.getString(R.string.scanner_privacy_note)))
+        val note = Widgets.caption(context, context.getString(R.string.scanner_privacy_note))
+        note.setPadding(0, Widgets.dp(context, 12), 0, 0)
+        column.addView(note)
 
         scroll.addView(column, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT

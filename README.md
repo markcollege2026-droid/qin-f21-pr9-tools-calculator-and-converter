@@ -94,12 +94,47 @@ See [`docs/HARDWARE.md`](docs/HARDWARE.md) for the per-tool support matrix.
 
 ## Design system
 
+![Redesigned screens](docs/ui-redesign.png)
+
 ![Design system](docs/design-system.png)
 
-The sheet is rendered directly from `core/design/src/main/res` by
-`tools/render_design_sheet.py`, so it shows the shipped palette, type scale and the full
-61-icon set rather than a mock-up. It is a rendering of the resources, not a screenshot
-of the running app.
+Both images are rendered **from the resources** in `core/design/src/main/res`:
+`tools/render_ui_screens.py` draws the three core screens at 1:1 (`320 × 427 dp`) from the
+real tokens and icons, and `tools/render_design_sheet.py` renders the palette with its
+contrast ratios, the type scale and the full 61-icon set. They are renderings of the design
+system, not screenshots of the running app - no device or emulator was available here
+(see [`docs/TESTING.md`](docs/TESTING.md)).
+
+### The system
+
+* **One signal colour.** Lime (`#BEF264`) is only ever the primary action, the current
+  reading and the keypad focus ring. Amber, blue, green and red are semantic (pinned item,
+  network data, available, destructive) and never decorative. Everything else is a
+  six-step graphite surface ladder, so the eye always knows where to look on a screen the
+  size of a credit card.
+* **4 pt grid.** Every margin, padding, height and radius is a multiple of 4 dp
+  (4 / 8 / 12 / 16 / 24 / 32). Radii: 8 for small controls, 12 for rows and keys, 16 for
+  cards, pill for chips and the search field.
+* **Two weights, one monospace.** Hierarchy comes from size, colour and letter spacing
+  (`-0.02` on the big reading, `+0.14` on section labels), not from extra font files.
+* **Every reading is an instrument.** The answer always sits in a recessed card with a tiny
+  tracked eyebrow above it ("RESULT", "ELAPSED"), in monospace, in lime - the same pattern
+  on the calculator, converter, currency, timer, stopwatch, sound meter, GPS and recorder.
+* **The D-pad always answers.** Anything focusable draws a 2 dp lime ring and one step up
+  the surface ladder when it holds the focus; the resting row keeps the hairline only.
+* **Text column alignment.** Tool rows use a 32 dp icon chip so every title starts on the
+  same vertical line, and diagnostic values are right-aligned monospace so the numbers form
+  a clean column.
+* **Accessibility.** The smallest text token (`text_muted`) is 5.3:1 on the background,
+  body text 18:1, lime on background 15.1:1 - all above WCAG AA. Every touch target is at
+  least 44 dp.
+
+The token values live in [`core/design/src/main/res/values`](core/design/src/main/res/values)
+(`colors.xml`, `dimens.xml`, `styles.xml`); the component kit every screen is assembled from
+is `Widgets` in
+[`Screen.kt`](app/src/main/kotlin/com/qin/f21/toolbox/ui/Screen.kt)
+(`card`, `displayCard`, `resultCard`, `listRow`, `sectionHeader`, `chip`, `emptyState`,
+`focusBackground`).
 
 ## Building
 

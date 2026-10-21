@@ -37,24 +37,21 @@ class StopwatchScreen(host: ScreenHost) : Screen(host) {
         val root = Widgets.column(context)
         root.setBackgroundColor(Widgets.color(context, R.color.bg))
 
-        val timeCard = Widgets.column(context)
+        val timeCard = Widgets.displayCard(context, 16)
         timeCard.gravity = Gravity.CENTER
-        timeCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 16),
-            Widgets.dp(context, 12), Widgets.dp(context, 16)
-        )
-        timeCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
+        val eyebrow = Widgets.eyebrow(context, context.getString(R.string.stopwatch_elapsed))
+        timeCard.addView(eyebrow)
         timeLabel = Widgets.text(context, "00:00.000", R.style.Text_Display)
         timeLabel.gravity = Gravity.CENTER
         timeLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 32f)
-        timeCard.addView(timeLabel)
+        timeCard.addView(timeLabel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = Widgets.dp(context, 6) })
         statusLabel = Widgets.caption(context, context.getString(R.string.stopwatch_ready))
         timeCard.addView(statusLabel)
         root.addView(timeCard, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 8), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 12), Widgets.dp(context, 12), 0) })
 
         val actions = Widgets.row(context)
         startButton = Widgets.button(context, context.getString(R.string.action_start))
@@ -65,13 +62,13 @@ class StopwatchScreen(host: ScreenHost) : Screen(host) {
         resetButton = Widgets.button(context, context.getString(R.string.action_reset), secondary = true)
         resetButton.setOnClickListener { reset() }
         actions.addView(startButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        actions.addView(Widgets.spacer(context, 6))
+        actions.addView(Widgets.spacer(context, 8))
         actions.addView(lapButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        actions.addView(Widgets.spacer(context, 6))
+        actions.addView(Widgets.spacer(context, 8))
         actions.addView(resetButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         root.addView(actions, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 6), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0) })
 
         root.addView(Widgets.sectionHeader(context, context.getString(R.string.stopwatch_laps)))
         val scroll = ScrollView(context).forKeypad()

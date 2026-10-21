@@ -1,37 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Spacing, radius and type tokens.
+
+  Everything is a multiple of 4 dp (the 4 pt grid) so the rows line up down the whole
+  screen. The device is 480 x 640 px at ~240 dpi, i.e. 320 x 427 dp - there is no room for
+  half steps, so the small scale stops at 4 dp and the large one at 32 dp.
+-->
 <resources>
-    <!-- Spacing scale (4dp base) -->
+    <!-- Spacing scale -->
     <dimen name="space_xs">4dp</dimen>
     <dimen name="space_sm">8dp</dimen>
     <dimen name="space_md">12dp</dimen>
     <dimen name="space_lg">16dp</dimen>
     <dimen name="space_xl">24dp</dimen>
+    <dimen name="space_2xl">32dp</dimen>
 
     <!-- Screen metrics for the Qin F21 Pro (480 x 640 px, 4:3, ~240 dpi -> 320 x 427 dp) -->
-    <dimen name="screen_padding">10dp</dimen>
-    <dimen name="section_gap">14dp</dimen>
+    <dimen name="screen_padding">12dp</dimen>
+    <dimen name="section_gap">16dp</dimen>
     <dimen name="item_gap">8dp</dimen>
 
-    <!-- Radii -->
-    <dimen name="radius_sm">6dp</dimen>
-    <dimen name="radius_md">10dp</dimen>
-    <dimen name="radius_lg">14dp</dimen>
+    <!-- Radii: 8 for small controls, 12 for rows/keys, 16 for cards, pill for chips -->
+    <dimen name="radius_sm">8dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">16dp</dimen>
+    <dimen name="radius_pill">100dp</dimen>
 
     <!-- Typography -->
-    <dimen name="text_display">28sp</dimen>
-    <dimen name="text_title">18sp</dimen>
-    <dimen name="text_subtitle">15sp</dimen>
+    <dimen name="text_display">34sp</dimen>
+    <dimen name="text_title">17sp</dimen>
+    <dimen name="text_subtitle">14sp</dimen>
     <dimen name="text_body">14sp</dimen>
     <dimen name="text_label">12sp</dimen>
     <dimen name="text_caption">11sp</dimen>
-    <dimen name="text_mono">16sp</dimen>
+    <dimen name="text_mono">17sp</dimen>
+    <dimen name="text_eyebrow">9sp</dimen>
 
     <!-- Controls -->
     <dimen name="touch_min">44dp</dimen>
-    <dimen name="key_height">42dp</dimen>
+    <dimen name="button_height">46dp</dimen>
+    <dimen name="key_height">44dp</dimen>
+    <dimen name="row_height">56dp</dimen>
     <dimen name="icon_size">22dp</dimen>
     <dimen name="icon_size_small">18dp</dimen>
-    <dimen name="tile_height">58dp</dimen>
-    <dimen name="header_height">44dp</dimen>
+    <dimen name="tile_height">72dp</dimen>
+    <dimen name="header_height">52dp</dimen>
     <dimen name="stroke_focus">2dp</dimen>
 </resources>

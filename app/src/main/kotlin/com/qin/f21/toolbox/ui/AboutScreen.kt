@@ -28,8 +28,8 @@ class AboutScreen(host: ScreenHost) : Screen(host) {
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 8),
-            Widgets.dp(context, 10), Widgets.dp(context, 16)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
         scroll.addView(column, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -40,33 +40,49 @@ class AboutScreen(host: ScreenHost) : Screen(host) {
 
     private fun build() {
         val context = host.activity
-        val title = Widgets.text(
-            context,
-            context.getString(R.string.app_name),
-            R.style.Text_Title
+
+        // Hero: name, version and the one-line promise, on a lime-tinted card.
+        val hero = Widgets.column(context)
+        hero.setPadding(
+            Widgets.dp(context, 16), Widgets.dp(context, 16),
+            Widgets.dp(context, 16), Widgets.dp(context, 16)
         )
-        title.gravity = Gravity.CENTER
-        column.addView(title)
-        val version = Widgets.caption(
-            context,
-            context.getString(R.string.about_version, BuildConfigCompat.VERSION_NAME)
+        hero.background = Widgets.roundedBackground(
+            context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary), 16
         )
-        version.gravity = Gravity.CENTER
-        column.addView(version)
-        val minOs = Widgets.caption(context, context.getString(R.string.about_min_os))
-        minOs.gravity = Gravity.CENTER
-        column.addView(minOs)
-        val tagline = Widgets.caption(context, context.getString(R.string.about_tagline))
-        tagline.gravity = Gravity.CENTER
-        column.addView(tagline)
+        val name = Widgets.text(context, context.getString(R.string.app_name), R.style.Text_Title)
+        name.setTextColor(Widgets.color(context, R.color.primary))
+        hero.addView(name)
+        val tagline = Widgets.text(context, context.getString(R.string.about_tagline), R.style.Text_Label)
+        tagline.setTextColor(Widgets.color(context, R.color.text_primary))
+        tagline.setPadding(0, Widgets.dp(context, 6), 0, 0)
+        hero.addView(tagline)
+        val meta = Widgets.text(
+            context,
+            context.getString(R.string.about_version, BuildConfigCompat.VERSION_NAME) + " · " +
+                context.getString(R.string.about_min_os),
+            R.style.Text_Caption
+        )
+        meta.setTextColor(Widgets.color(context, R.color.text_secondary))
+        meta.setPadding(0, Widgets.dp(context, 8), 0, 0)
+        hero.addView(meta)
+        val heroParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        heroParams.bottomMargin = Widgets.dp(context, 8)
+        hero.layoutParams = heroParams
+        column.addView(hero)
 
         column.addView(Widgets.sectionHeader(context, context.getString(R.string.about_offline_title)))
-        column.addView(Widgets.text(context, context.getString(R.string.about_offline_body), R.style.Text_Caption))
+        val offline = Widgets.card(context)
+        offline.addView(Widgets.text(context, context.getString(R.string.about_offline_body), R.style.Text_Caption))
+        column.addView(offline)
 
         column.addView(Widgets.sectionHeader(context, context.getString(R.string.about_hardware_title)))
         for (capability in Toolbox.capabilities.list()) {
             val row = Widgets.row(context)
             row.gravity = Gravity.CENTER_VERTICAL
+            row.setPadding(Widgets.dp(context, 4), Widgets.dp(context, 6), Widgets.dp(context, 4), Widgets.dp(context, 6))
             val name = Widgets.text(context, capability.title, R.style.Text_Label)
             row.addView(name, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             val value = Widgets.text(
@@ -104,10 +120,14 @@ class AboutScreen(host: ScreenHost) : Screen(host) {
             context.getString(R.string.about_keys_hash)
         )
         for (shortcut in shortcuts) {
-            column.addView(Widgets.caption(context, "•  $shortcut"))
+            val line = Widgets.text(context, shortcut, R.style.Text_Caption)
+            line.setPadding(Widgets.dp(context, 4), Widgets.dp(context, 4), 0, Widgets.dp(context, 4))
+            column.addView(line)
         }
 
         column.addView(Widgets.sectionHeader(context, context.getString(R.string.about_licenses_title)))
-        column.addView(Widgets.caption(context, context.getString(R.string.about_licenses_body)))
+        val licenses = Widgets.card(context)
+        licenses.addView(Widgets.text(context, context.getString(R.string.about_licenses_body), R.style.Text_Caption))
+        column.addView(licenses)
     }
 }

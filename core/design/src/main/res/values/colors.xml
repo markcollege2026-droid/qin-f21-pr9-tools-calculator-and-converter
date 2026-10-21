@@ -1,31 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Surfaces -->
-    <color name="bg">#FF0B0F14</color>
-    <color name="surface">#FF141A22</color>
-    <color name="surface_alt">#FF1C242E</color>
-    <color name="surface_high">#FF263140</color>
-    <color name="outline">#FF2A3441</color>
-    <color name="outline_strong">#FF3A4757</color>
+<!--
+  Qin F21 Toolbox - colour tokens.
 
-    <!-- Brand -->
-    <color name="primary">#FF2DD4BF</color>
-    <color name="primary_dim">#FF0F3F3A</color>
-    <color name="on_primary">#FF04211F</color>
-    <color name="accent">#FFFBBF24</color>
-    <color name="accent_dim">#FF4A3410</color>
-    <color name="info">#FF60A5FA</color>
-    <color name="info_dim">#FF16273F</color>
-    <color name="danger">#FFF87171</color>
-    <color name="danger_dim">#FF3B1D1D</color>
-    <color name="success">#FF4ADE80</color>
+  The palette is a neutral graphite ladder (nothing competes with the content) plus one
+  signal colour: lime. Lime is only ever used for three things - the primary action, the
+  current reading and the keypad focus ring - so on the small 4:3 screen the eye always
+  knows where to look. Amber, blue and red are semantic: pinned items, network data and
+  destructive/error states. They never appear as decoration.
+-->
+<resources>
+    <!-- Surfaces, darkest to lightest -->
+    <color name="bg">#FF0A0B0D</color>
+    <color name="surface_sunken">#FF060709</color>
+    <color name="surface">#FF131417</color>
+    <color name="surface_alt">#FF1A1C20</color>
+    <color name="surface_high">#FF23262B</color>
+
+    <!-- Lines -->
+    <color name="outline">#FF26292E</color>
+    <color name="outline_strong">#FF3A3F46</color>
+    <color name="divider">#FF1E2126</color>
+
+    <!-- Signal -->
+    <color name="primary">#FFBEF264</color>
+    <color name="primary_pressed">#FFA7DC4A</color>
+    <color name="primary_dim">#FF232B10</color>
+    <color name="on_primary">#FF121603</color>
+
+    <!-- Semantic -->
+    <color name="accent">#FFFFC857</color>
+    <color name="accent_dim">#FF3A2C10</color>
+    <color name="info">#FF86A9FF</color>
+    <color name="info_dim">#FF182136</color>
+    <color name="danger">#FFFF7B7B</color>
+    <color name="danger_dim">#FF331919</color>
+    <color name="success">#FF86DF9E</color>
+    <color name="success_dim">#FF12261A</color>
 
     <!-- Text -->
-    <color name="text_primary">#FFF1F5F9</color>
-    <color name="text_secondary">#FF9AA8B8</color>
-    <color name="text_muted">#FF6B7A8C</color>
-    <color name="text_on_accent">#FF241A02</color>
-    <color name="text_on_info">#FF06172E</color>
+    <color name="text_primary">#FFF3F5F7</color>
+    <color name="text_secondary">#FFA2A9B2</color>
+    <color name="text_muted">#FF7C858F</color>
+    <color name="text_on_accent">#FF22180A</color>
+    <color name="text_on_info">#FF0A1226</color>
+    <color name="text_on_danger">#FF240808</color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>

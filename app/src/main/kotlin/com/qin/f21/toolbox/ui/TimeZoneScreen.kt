@@ -132,21 +132,22 @@ class TimeZoneScreen(host: ScreenHost) : Screen(host) {
     private fun zoneCard(context: android.content.Context, label: String): ZoneCard {
         val card = Widgets.column(context)
         card.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 8),
-            Widgets.dp(context, 12), Widgets.dp(context, 8)
+            Widgets.dp(context, 14), Widgets.dp(context, 10),
+            Widgets.dp(context, 14), Widgets.dp(context, 10)
         )
         card.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface_sunken), Widgets.color(context, R.color.outline), 16
         )
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
         params.topMargin = Widgets.dp(context, 8)
         card.layoutParams = params
-        val caption = Widgets.caption(context, label)
-        card.addView(caption)
-        val time = Widgets.text(context, "--:--", R.style.Text_Title)
+        card.addView(Widgets.eyebrow(context, label))
+        val time = Widgets.text(context, "--:--", R.style.Text_Display)
+        time.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
         time.setTextColor(Widgets.color(context, R.color.primary))
+        time.setPadding(0, Widgets.dp(context, 4), 0, 0)
         card.addView(time)
         val date = Widgets.caption(context, "")
         card.addView(date)
@@ -159,7 +160,7 @@ class TimeZoneScreen(host: ScreenHost) : Screen(host) {
             host.activity,
             Widgets.color(host.activity, R.color.surface),
             Widgets.color(host.activity, R.color.outline),
-            6
+            12
         ))
         return spinner
     }

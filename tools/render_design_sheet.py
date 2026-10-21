@@ -395,29 +395,30 @@ def main():
     draw.text((s(40), y), "TYPE SCALE", font=section_font, fill=primary)
     y += s(24)
     samples = [
-        ("Display", "text_display", "28sp", "1,234.56 m"),
-        ("Title", "text_title", "18sp", "Unit converter"),
-        ("Subtitle", "text_subtitle", "15sp", "Length - kilometre to mile"),
-        ("Body", "text_body", "14sp", "Every conversion is stored on the device"),
-        ("Label", "text_label", "12sp", "All units - 24 units"),
-        ("Caption", "text_caption", "11sp", "Bundled offline rates, no network"),
-        ("Mono", "text_mono", "16sp", "00:42.318"),
+        ("Display", "text_display", "1,234.56 m"),
+        ("Title", "text_title", "Unit converter"),
+        ("Subtitle", "text_subtitle", "Length - kilometre to mile"),
+        ("Body", "text_body", "Every conversion is stored on the device"),
+        ("Label", "text_label", "All units - 24 units"),
+        ("Caption", "text_caption", "Bundled offline rates, no network"),
+        ("Mono", "text_mono", "00:42.318"),
     ]
-    for name, dim, size, sample in samples:
+    for name, dim, sample in samples:
         value = dimens.get(dim, 14)
         draw.text((s(40), y), name, font=label_font, fill=text_secondary)
         draw.text((s(140), y - s(2)), sample, font=font(int(value * SCALE * 0.9)), fill=text_primary)
-        draw.text((s(720), y), "%s  %s" % (size, dim), font=small_font, fill=text_muted)
+        draw.text((s(720), y), "%dsp  %s" % (value, dim), font=small_font, fill=text_muted)
         y += s(34)
 
     # ---- icons --------------------------------------------------------------
     y += s(30)
-    draw.text((s(40), y), "ICONS (61 vector drawables, 24dp grid)", font=section_font, fill=primary)
-    y += s(20)
     drawables = sorted(
         f for f in os.listdir(os.path.join(DESIGN, "drawable"))
         if f.startswith("ic_") and f.endswith(".xml")
     )
+    draw.text((s(40), y), "ICONS (%d vector drawables, 24dp grid)" % len(drawables),
+              font=section_font, fill=primary)
+    y += s(20)
     columns = 10
     cell = s(90)
     icon_size = s(40)
@@ -446,8 +447,8 @@ def main():
     def row_card(x0, y0, title, subtitle, focused):
         fill = surface_alt if focused else surface
         draw.rounded_rectangle(
-            [x0, y0, x0 + s(430), y0 + s(50)], radius=s(10), fill=fill,
-            outline=primary if focused else outline, width=s(3 if focused else 1))
+            [x0, y0, x0 + s(430), y0 + s(50)], radius=s(12), fill=fill,
+            outline=primary if focused else outline, width=s(2 if focused else 1))
         viewport, strokes, fills = load_vector(os.path.join(DESIGN, "drawable/ic_convert.xml"))
         render_icon(draw, [p for p, w in strokes], (x0 + s(12), y0 + s(13)), s(24), viewport,
                     primary, 1.7)
@@ -464,24 +465,24 @@ def main():
     y += s(78)
 
     # buttons
-    draw.rounded_rectangle([s(40), y, s(170), y + s(38)], radius=s(8), fill=primary)
+    draw.rounded_rectangle([s(40), y, s(170), y + s(38)], radius=s(12), fill=primary)
     draw.text((s(58), y + s(10)), "Calculate", font=font(13 * SCALE, bold=True), fill=colors["on_primary"])
-    draw.rounded_rectangle([s(186), y, s(316), y + s(38)], radius=s(8), fill=surface_alt,
+    draw.rounded_rectangle([s(186), y, s(316), y + s(38)], radius=s(12), fill=surface_alt,
                            outline=outline, width=s(1))
     draw.text((s(202), y + s(10)), "Reset", font=font(13 * SCALE), fill=text_primary)
     # focused secondary button
-    draw.rounded_rectangle([s(332), y, s(462), y + s(38)], radius=s(8), fill=surface_alt,
-                           outline=primary, width=s(3))
+    draw.rounded_rectangle([s(332), y, s(462), y + s(38)], radius=s(12), fill=surface_alt,
+                           outline=primary, width=s(2))
     draw.text((s(348), y + s(10)), "Swap", font=font(13 * SCALE), fill=text_primary)
     draw.text((s(490), y + s(12)), "primary / secondary / focused secondary", font=small_font, fill=text_muted)
     y += s(54)
 
     # result and unavailable cards
-    draw.rounded_rectangle([s(40), y, s(460), y + s(56)], radius=s(10),
+    draw.rounded_rectangle([s(40), y, s(460), y + s(56)], radius=s(16),
                            fill=colors["primary_dim"], outline=primary, width=s(1))
     draw.text((s(56), y + s(10)), "0.621371 mi", font=font(20 * SCALE, bold=True), fill=primary)
     draw.text((s(56), y + s(38)), "result card", font=small_font, fill=text_secondary)
-    draw.rounded_rectangle([s(490), y, s(910), y + s(56)], radius=s(10),
+    draw.rounded_rectangle([s(490), y, s(910), y + s(56)], radius=s(16),
                            fill=surface_alt, outline=colors["outline_strong"], width=s(1))
     draw.text((s(506), y + s(10)), "No infrared emitter", font=font(13 * SCALE, bold=True), fill=text_primary)
     draw.text((s(506), y + s(32)), "runtime detection failed - the code list stays readable",
@@ -489,14 +490,15 @@ def main():
     y += s(72)
 
     # keypad - the exact grids the app builds, 4 columns, keys measured by the view
-    draw.text((s(40), y), "KEYPAD - converter (120 dp tall, 4 x 4)", font=section_font, fill=primary)
-    draw.text((s(560), y), "calculator (4 x 5)", font=section_font, fill=primary)
+    key_height = dimens.get("key_height", 44)
+    draw.text((s(40), y), "KEYPAD - converter (%d dp, 4 x 4)" % 136, font=section_font, fill=primary)
+    draw.text((s(560), y), "calculator (4 x 4, commit key filled)", font=section_font, fill=primary)
     y += s(20)
     converter_keys = [["7", "8", "9", "\u232b"], ["4", "5", "6", "C"],
                       ["1", "2", "3", "\u2212"], ["0", "00", ".", "\u00b1"]]
     calculator_keys = [["7", "8", "9", "\u00f7"], ["4", "5", "6", "\u00d7"],
-                       ["1", "2", "3", "\u2212"], ["0", ".", "=", "+"],
-                       ["(", ")", "%", "\u232b"]]
+                       ["1", "2", "3", "\u2212"], ["0", ".", "=", "+"]]
+    operators = {"\u00f7", "\u00d7", "\u2212", "+", "%", "\u00b1"}
 
     def keypad(x0, y0, grid, focused_key, key_w, key_h, gap):
         for row_i, row in enumerate(grid):
@@ -504,18 +506,22 @@ def main():
                 kx = x0 + column * (key_w + gap)
                 ky = y0 + row_i * (key_h + gap)
                 focused = label == focused_key
+                commit = label == "="
+                operator = label in operators
+                fill = colors["primary"] if commit else (colors["primary_dim"] if operator else surface_alt)
+                glyph = colors["on_primary"] if commit else (primary if operator else text_primary)
                 draw.rounded_rectangle(
-                    [kx, ky, kx + key_w, ky + key_h], radius=s(6),
-                    fill=surface_alt if focused else surface,
+                    [kx, ky, kx + key_w, ky + key_h], radius=s(12),
+                    fill=fill,
                     outline=primary if focused else outline,
-                    width=s(2 if focused else 1))
+                    width=s(3 if focused else 1))
                 glyph_font = font(14 * SCALE, mono=True)
                 text_width = draw.textlength(label, font=glyph_font)
                 draw.text((kx + (key_w - text_width) / 2, ky + s((key_h - s(18)) // 2) + s(2)),
-                          label, font=glyph_font, fill=text_primary)
+                          label, font=glyph_font, fill=glyph)
 
-    keypad(s(40), y, converter_keys, "5", s(58), s(27), s(5))
-    keypad(s(560), y, calculator_keys, "=", s(58), s(22), s(4))
+    keypad(s(40), y, converter_keys, "5", s(58), s(24), s(6))
+    keypad(s(560), y, calculator_keys, "=", s(58), s(24), s(6))
 
     note_x = s(316)
     draw.text((note_x, y + s(2)), "Keys are laid out by KeypadView, not by the", font=small_font, fill=text_secondary)
@@ -524,9 +530,13 @@ def main():
     draw.text((note_x, y + s(58)), "The key with the focus ring is the current", font=small_font, fill=text_muted)
     draw.text((note_x, y + s(74)), "D-pad position; Enter presses it.", font=small_font, fill=text_muted)
 
-    y += 5 * (s(22) + s(4)) + s(28)
+    y += 4 * (s(24) + s(6)) + s(28)
 
-    draw.text((s(40), y), "spacing 4 / 8 / 12 / 16 / 24 dp     touch target 44 dp     key 42 dp",
+    draw.text((s(40), y),
+              "spacing %d / %d / %d / %d / %d / %d dp     touch target %d dp     key %d dp"
+              % (dimens.get("space_xs", 4), dimens.get("space_sm", 8), dimens.get("space_md", 12),
+                 dimens.get("space_lg", 16), dimens.get("space_xl", 24), dimens.get("space_2xl", 32),
+                 dimens.get("touch_min", 44), key_height),
               font=small_font, fill=text_muted)
 
     image = image.resize((int(width), int(height)), Image.LANCZOS)

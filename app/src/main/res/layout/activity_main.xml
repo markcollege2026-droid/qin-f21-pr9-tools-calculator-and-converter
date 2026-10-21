@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  App shell.
+
+  The bar is deliberately quiet: no elevation, no filled accent, just the screen name and
+  a one-line context note over a hairline. On a 4:3 display every vertical pixel spent on
+  chrome is stolen from the tool, so the bar is 52 dp and the subtitle is 9 sp.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     android:layout_width="match_parent"
@@ -7,7 +14,7 @@
     android:background="@color/bg"
     android:fitsSystemWindows="true">
 
-    <!-- Header -->
+    <!-- App bar -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
@@ -15,60 +22,69 @@
         android:minHeight="@dimen/header_height"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@color/surface"
-        android:paddingLeft="4dp"
-        android:paddingRight="10dp"
+        android:background="@color/bg"
+        android:paddingLeft="6dp"
+        android:paddingRight="12dp"
         android:paddingTop="4dp"
         android:paddingBottom="4dp">
 
         <ImageView
             android:id="@+id/btn_back"
-            android:layout_width="@dimen/touch_min"
-            android:layout_height="@dimen/touch_min"
-            android:padding="11dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="9dp"
             android:src="@drawable/ic_back"
+            android:tint="@color/text_secondary"
             android:background="@drawable/bg_button_ghost"
             android:contentDescription="@string/action_back"
             android:focusable="true"
             android:clickable="true" />
 
-        <ImageView
-            android:id="@+id/header_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="6dp"
-            android:layout_marginLeft="6dp"
-            android:src="@drawable/ic_apps"
-            android:contentDescription="@null"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/header_title"
-            style="@style/Text.Title"
+        <!-- Title stack: the screen name, then one quiet line of context. -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:text="@string/app_name" />
-
-        <TextView
-            android:id="@+id/header_subtitle"
-            style="@style/Text.Caption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
             android:layout_marginLeft="6dp"
-            android:maxLines="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/header_title"
+                style="@style/Text.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="@string/app_name" />
+
+            <TextView
+                android:id="@+id/header_subtitle"
+                style="@style/Text.Section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/header_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/ic_apps"
+            android:tint="@color/text_muted"
+            android:contentDescription="@null"
             android:visibility="gone" />
     </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/outline" />
+        android:background="@color/divider" />
 
     <FrameLayout
         android:id="@+id/content"

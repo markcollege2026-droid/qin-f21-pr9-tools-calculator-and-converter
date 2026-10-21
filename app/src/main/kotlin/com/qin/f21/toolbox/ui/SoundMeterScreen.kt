@@ -30,36 +30,44 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
 
     override fun onCreateView(parent: ViewGroup): View {
         val context = host.activity
-        val root = Widgets.column(context)
-        root.setBackgroundColor(Widgets.color(context, R.color.bg))
+        val holder = Widgets.column(context)
+        holder.setBackgroundColor(Widgets.color(context, R.color.bg))
 
         if (!Toolbox.capabilities.hasMicrophone) {
-            root.addView(unavailableCard())
-            return root
+            holder.addView(unavailableCard())
+            return holder
         }
         if (!Toolbox.capabilities.hasMicrophonePermission) {
-            root.addView(permissionCard())
-            return root
+            holder.addView(permissionCard())
+            return holder
         }
 
-        val readingCard = Widgets.column(context)
+        // The fixed stack (reading, level bar, spectrum, actions, note) is ~430 dp on a
+        // 427 dp screen, so the content scrolls instead of pushing the button off the edge.
+        val scroll = android.widget.ScrollView(context).forKeypad()
+        scroll.isVerticalScrollBarEnabled = false
+        val content = Widgets.column(context)
+        scroll.addView(content, android.widget.FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
+        holder.addView(scroll, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
+
+        val readingCard = Widgets.displayCard(context, 14)
         readingCard.gravity = Gravity.CENTER
-        readingCard.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 14),
-            Widgets.dp(context, 12), Widgets.dp(context, 14)
-        )
-        readingCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
+        readingCard.addView(Widgets.eyebrow(context, context.getString(R.string.sound_level)))
         decibelLabel = Widgets.text(context, "—", R.style.Text_Display)
         decibelLabel.gravity = Gravity.CENTER
         decibelLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 36f)
-        readingCard.addView(decibelLabel)
+        readingCard.addView(decibelLabel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = Widgets.dp(context, 6) })
         detailLabel = Widgets.caption(context, context.getString(R.string.sound_idle))
         readingCard.addView(detailLabel)
-        root.addView(readingCard, LinearLayout.LayoutParams(
+        content.addView(readingCard, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 8), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 12), Widgets.dp(context, 12), 0) })
 
         // level bar
         val barTrack = Widgets.row(context)
@@ -70,12 +78,12 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
         levelBar.background = Widgets.roundedBackground(context, Widgets.color(context, R.color.primary), 0, 6)
         barTrack.addView(levelBar, LinearLayout.LayoutParams(0, Widgets.dp(context, 10), 0.05f))
         barTrack.addView(View(context), LinearLayout.LayoutParams(0, Widgets.dp(context, 10), 0.95f))
-        root.addView(barTrack, LinearLayout.LayoutParams(
+        content.addView(barTrack, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, Widgets.dp(context, 10)
         ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0) })
 
         // spectrum
-        root.addView(Widgets.sectionHeader(context, context.getString(R.string.sound_spectrum)))
+        content.addView(Widgets.sectionHeader(context, context.getString(R.string.sound_spectrum)))
         val spectrum = Widgets.row(context)
         spectrum.gravity = Gravity.BOTTOM
         val bands = ArrayList<View>()
@@ -92,22 +100,22 @@ class SoundMeterScreen(host: ScreenHost) : Screen(host) {
             bands.add(bar)
         }
         bandViews = bands
-        root.addView(spectrum, LinearLayout.LayoutParams(
+        content.addView(spectrum, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, Widgets.dp(context, 110)
         ).apply { setMargins(Widgets.dp(context, 12), 0, Widgets.dp(context, 12), 0) })
 
         startButton = Widgets.button(context, context.getString(R.string.action_start))
         startButton.setOnClickListener { toggle() }
-        root.addView(startButton, LinearLayout.LayoutParams(
+        content.addView(startButton, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 10), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 10), Widgets.dp(context, 12), 0) })
 
         val note = Widgets.caption(context, context.getString(R.string.sound_calibration_note))
-        root.addView(note, LinearLayout.LayoutParams(
+        content.addView(note, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 12), 0, Widgets.dp(context, 12), Widgets.dp(context, 10)) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), Widgets.dp(context, 16)) })
 
-        return root
+        return holder
     }
 
     private fun bandLabel(hz: Int): String = when {

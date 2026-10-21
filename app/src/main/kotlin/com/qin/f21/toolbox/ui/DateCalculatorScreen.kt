@@ -37,8 +37,8 @@ class DateCalculatorScreen(host: ScreenHost) : Screen(host) {
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         val column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 6),
-            Widgets.dp(context, 10), Widgets.dp(context, 12)
+            Widgets.dp(context, 12), Widgets.dp(context, 12),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
 
         column.addView(dateRow(context.getString(R.string.dc_from), true))
@@ -50,9 +50,14 @@ class DateCalculatorScreen(host: ScreenHost) : Screen(host) {
             Widgets.dp(context, 12), Widgets.dp(context, 10)
         )
         differenceCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary)
+            context, Widgets.color(context, R.color.primary_dim), Widgets.color(context, R.color.primary), 16
         )
+        val differenceEyebrow = Widgets.eyebrow(context, context.getString(R.string.dc_difference_label))
+        differenceEyebrow.setTextColor(Widgets.color(context, R.color.primary))
+        differenceCard.addView(differenceEyebrow)
         differenceLabel = Widgets.text(context, "", R.style.Text_Subtitle)
+        differenceLabel.setTextColor(Widgets.color(context, R.color.text_primary))
+        differenceLabel.setPadding(0, Widgets.dp(context, 4), 0, 0)
         differenceCard.addView(differenceLabel)
         val cardParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -70,7 +75,7 @@ class DateCalculatorScreen(host: ScreenHost) : Screen(host) {
             Widgets.dp(context, 12), Widgets.dp(context, 8)
         )
         adjustedCard.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline), 12
         )
         adjustedLabel = Widgets.text(context, "", R.style.Text_Body)
         adjustedCard.addView(adjustedLabel)

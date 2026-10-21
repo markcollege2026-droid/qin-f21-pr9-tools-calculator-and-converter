@@ -31,8 +31,8 @@ class DiagnosticsScreen(host: ScreenHost) : Screen(host) {
         scroll.setBackgroundColor(Widgets.color(context, R.color.bg))
         column = Widgets.column(context)
         column.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 6),
-            Widgets.dp(context, 10), Widgets.dp(context, 16)
+            Widgets.dp(context, 12), Widgets.dp(context, 4),
+            Widgets.dp(context, 12), Widgets.dp(context, 24)
         )
         scroll.addView(column, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -109,34 +109,45 @@ class DiagnosticsScreen(host: ScreenHost) : Screen(host) {
         column.addView(Widgets.sectionHeader(host.activity, title))
     }
 
+    /**
+     * One diagnostic reading: the key and its note on the left, the value right-aligned in
+     * monospace so the numbers form a clean column down the screen.
+     */
     private fun addRow(label: String, value: String, note: String = "", valueColor: Int = R.color.text_primary) {
-                val row = LinearLayout(context)
+        val row = LinearLayout(context)
         row.orientation = LinearLayout.HORIZONTAL
         row.gravity = Gravity.CENTER_VERTICAL
         row.setPadding(
-            Widgets.dp(context, 10), Widgets.dp(context, 6),
-            Widgets.dp(context, 10), Widgets.dp(context, 6)
+            Widgets.dp(context, 12), Widgets.dp(context, 10),
+            Widgets.dp(context, 12), Widgets.dp(context, 10)
         )
+        row.minimumHeight = Widgets.dp(context, 52)
         row.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
+            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline), 12
         )
         val textColumn = Widgets.column(context)
         val labelView = Widgets.text(context, label, R.style.Text_Label)
         labelView.setTextColor(Widgets.color(context, R.color.text_secondary))
         textColumn.addView(labelView)
-        val valueView = Widgets.text(context, value, R.style.Text_Body)
-        valueView.setTextColor(Widgets.color(context, valueColor))
-        textColumn.addView(valueView)
         if (note.isNotEmpty()) {
             val noteView = Widgets.text(context, note, R.style.Text_Caption)
             noteView.maxLines = 2
+            noteView.setPadding(0, Widgets.dp(context, 2), 0, 0)
             textColumn.addView(noteView)
         }
         row.addView(textColumn, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        val valueView = Widgets.text(context, value, R.style.Text_Mono)
+        valueView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
+        valueView.setTextColor(Widgets.color(context, valueColor))
+        valueView.gravity = Gravity.END
+        valueView.maxLines = 2
+        row.addView(valueView, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { leftMargin = Widgets.dp(context, 12) })
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        params.bottomMargin = Widgets.dp(context, 4)
+        params.bottomMargin = Widgets.dp(context, 8)
         row.layoutParams = params
         column.addView(row)
     }

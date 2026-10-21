@@ -21,3 +21,7 @@ tools/.toolchain/
 # Signing material
 *.keystore
 *.jks
+
+# Python bytecode from the tools/
+__pycache__/
+*.pyc

@@ -47,19 +47,15 @@ class RecorderScreen(host: ScreenHost) : Screen(host) {
             return root
         }
 
-        val card = Widgets.column(context)
+        val card = Widgets.displayCard(context, 14)
         card.gravity = Gravity.CENTER
-        card.setPadding(
-            Widgets.dp(context, 12), Widgets.dp(context, 14),
-            Widgets.dp(context, 12), Widgets.dp(context, 14)
-        )
-        card.background = Widgets.roundedBackground(
-            context, Widgets.color(context, R.color.surface), Widgets.color(context, R.color.outline)
-        )
+        card.addView(Widgets.eyebrow(context, context.getString(R.string.recorder_duration)))
         timeLabel = Widgets.text(context, "00:00", R.style.Text_Display)
         timeLabel.gravity = Gravity.CENTER
         timeLabel.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 32f)
-        card.addView(timeLabel)
+        card.addView(timeLabel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = Widgets.dp(context, 6) })
 
         val barTrack = Widgets.row(context)
         barTrack.background = Widgets.roundedBackground(
@@ -77,13 +73,13 @@ class RecorderScreen(host: ScreenHost) : Screen(host) {
         card.addView(barTrack)
         root.addView(card, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 8), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 12), Widgets.dp(context, 12), 0) })
 
         recordButton = Widgets.button(context, context.getString(R.string.action_record))
         recordButton.setOnClickListener { toggle() }
         root.addView(recordButton, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(Widgets.dp(context, 8), Widgets.dp(context, 4), Widgets.dp(context, 8), 0) })
+        ).apply { setMargins(Widgets.dp(context, 12), Widgets.dp(context, 8), Widgets.dp(context, 12), 0) })
 
         root.addView(Widgets.sectionHeader(context, context.getString(R.string.recorder_files)))
         val scroll = ScrollView(context).forKeypad()
@@ -93,7 +89,7 @@ class RecorderScreen(host: ScreenHost) : Screen(host) {
         ))
         root.addView(scroll, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
-        ).apply { setMargins(Widgets.dp(context, 8), 0, Widgets.dp(context, 8), Widgets.dp(context, 8)) })
+        ).apply { setMargins(Widgets.dp(context, 12), 0, Widgets.dp(context, 12), Widgets.dp(context, 12)) })
 
         refreshList()
         return root
